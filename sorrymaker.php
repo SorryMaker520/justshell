@@ -60,8 +60,7 @@ function show_login_page($message = "")
 }
 
 if (!isset($_SESSION['authenticated'])) {
-    $stored_hashed_password = '$2y$10$v5iRsWbXplWSi.WaxHXE5eSjLgxKGGApLF854WglbKsnr0BkSI2ay'; // Use PASSWORD_DEFAULT hash u can use this site https://phppasswordhash.com/ for generate ur password >  Gunakan hash PASSWORD_DEFAULT Anda dapat menggunakan situs ini https://phppasswordhash.com/ untuk menghasilkan kata sandi Anda
-
+    $stored_hashed_password = '$2y$10$GOcG1Q2pGVhm6aN9S97wqup57ZZ6kSeyPXshTvr6FiV7d4Yhbn4Mu'; 
     if (isset($_POST['pass']) && password_verify($_POST['pass'], $stored_hashed_password)) {
         $_SESSION['authenticated'] = true;
     } else {
