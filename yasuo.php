@@ -39,18 +39,6 @@ if (isset($_GET['menu'])) {
     exit();
 }
 
-/*
-
-*GANTI NAMA BRAND DENGAN INI
-<?php echo $BRANDS ?> 
-
-* GANTI URL PATH DENGAN INI
-<?php echo $urlPath ?>
-
-* SAMA GANTI REDIRECT LOGIN/REGISTER
-
-*/
-
 ?>
 
 <!-- Script Landing Page -->
@@ -621,7 +609,7 @@ Daftar dan rasakan keseruan bermain di sini sekarang juga." />
                   >
                     
                       <div class="header-title-logo">
-                        <a href="/" data-animation-role="header-element">
+                        <a href="<?php echo $urlPath ?>" data-animation-role="header-element">
                         
 <img elementtiming="nbf-header-logo-desktop" src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/slotgacor.png?format=1500w" alt="<?php echo $BRANDS ?>" style="display:block" fetchpriority="high" loading="eager" decoding="async" data-loader="raw">
 
@@ -853,7 +841,7 @@ Daftar dan rasakan keseruan bermain di sini sekarang juga." />
                   >
                     
                       <div class="header-title-logo">
-                        <a href="/" data-animation-role="header-element">
+                        <a href="<?php echo $urlPath ?>" data-animation-role="header-element">
                         
 <img elementtiming="nbf-header-logo-desktop" src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/slotgacor.png?format=1500w" alt="<?php echo $BRANDS ?>" style="display:block" fetchpriority="high" loading="eager" decoding="async" data-loader="raw">
 
